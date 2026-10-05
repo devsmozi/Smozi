@@ -1,7 +1,7 @@
 import React from 'react';
 import { GameMode } from '../models/GameModels.ts';
 import { SmoziButton, SmoziIconButton } from './SmoziButton.tsx';
-import { Home } from 'lucide-react';
+import { Home, RotateCcw, Trophy, AlertTriangle } from 'lucide-react';
 
 interface GameOverDialogProps {
   gameMode: GameMode;
@@ -28,80 +28,103 @@ export const GameOverDialog: React.FC<GameOverDialogProps> = ({
   const isDaily = gameMode === GameMode.DAILY_CHALLENGE;
 
   const headerTitle = isClassic
-    ? 'Game Over'
+    ? 'GAME OVER'
     : isDaily
-    ? `Stage ${stageNumber || 1} Failed`
-    : 'Level Failed';
+    ? `STAGE ${stageNumber || 1} FAILED`
+    : 'LEVEL FAILED';
 
   const failureReason = outOfMoves
-    ? 'Out of moves! Target was not reached in time.'
-    : 'No more moves! No remaining pieces fit on the board.';
+    ? 'Move limit reached! Reach the objective sooner.'
+    : 'No moves left! No available pieces fit on the board.';
 
-  // Coins earned from classic run (1 coin per 15 pts)
   const coinsEarned = isClassic ? Math.max(10, Math.floor(score / 15)) : 0;
+  const isNewRecord = bestScore > 0 && score >= bestScore;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4 select-none">
-      <div className="w-full max-w-sm rounded-3xl bg-[#131D4A] border-3 border-[#FF3B30] p-6 shadow-2xl flex flex-col items-center animate-pop-in">
-        {/* Purple/Red Ribbon Header */}
-        <div className="px-7 py-2.5 rounded-2xl bg-gradient-to-b from-[#AF52DE] to-[#7A21AA] border-2 border-[#D396F1] shadow-lg -mt-11">
-          <span className="font-black text-2xl text-white tracking-wide">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 select-none animate-fade-in">
+      {/* Background ambient crimson glow */}
+      <div className="absolute w-80 h-80 rounded-full bg-rose-600/15 filter blur-3xl pointer-events-none" />
+
+      <div className="w-full max-w-sm rounded-[32px] bg-gradient-to-b from-[#182352] via-[#0F1638] to-[#080B1E] border-3 border-[#E53935] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_30px_rgba(229,57,53,0.3)] flex flex-col items-center animate-pop-in relative">
+        {/* 3D Crimson Ribbon Header */}
+        <div className="relative -mt-11 mb-2 px-8 py-2.5 rounded-2xl bg-gradient-to-b from-[#FF5252] via-[#D32F2F] to-[#8B0000] border-2 border-[#FFCDD2] shadow-[0_8px_20px_rgba(0,0,0,0.6)] flex items-center justify-center">
+          {/* Ribbon wing folds */}
+          <div className="absolute -left-3 top-3 w-3 h-3 bg-[#4A0000] [clip-path:polygon(100%_0,0_100%,100%_100%)] pointer-events-none" />
+          <div className="absolute -right-3 top-3 w-3 h-3 bg-[#4A0000] [clip-path:polygon(0_0,0_100%,100%_100%)] pointer-events-none" />
+
+          <span className="font-black text-xl text-white tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] uppercase">
             {headerTitle}
           </span>
         </div>
 
-        <p className="text-[#A5B4FC] text-xs font-semibold text-center mt-5 mb-1 px-2">
-          {failureReason}
-        </p>
+        {/* Centerpiece: Handcrafted 3D Defeat Crest SVG */}
+        <div className="relative w-44 h-32 my-1 flex items-center justify-center">
+          <img
+            src="/game-over-crest.svg"
+            alt="Defeat Emblem"
+            className="w-full h-full object-contain filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.7)] animate-[pulse_3s_ease-in-out_infinite]"
+          />
+        </div>
 
-        {/* Tier badge if Classic */}
-        {isClassic && levelTierLabel && (
-          <div className="px-3 py-1 rounded-full bg-indigo-900/60 border border-indigo-400/30 text-[11px] font-bold text-indigo-200 mb-2">
-            Reached: {levelTierLabel}
-          </div>
-        )}
+        {/* Failure reason explanation pill */}
+        <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-rose-950/60 border border-rose-500/30 text-[11px] text-rose-200 font-semibold mb-3 text-center">
+          <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+          <span className="truncate max-w-[260px]">{failureReason}</span>
+        </div>
 
-        {/* Score Card */}
-        <div className="w-4/5 py-3.5 my-3 rounded-2xl bg-[#0C1333] border border-[#2670E8] flex flex-col items-center">
-          <span className="text-[11px] font-bold text-[#8BA5F8] tracking-widest">
+        {/* Royal Obsidian Score Plaque */}
+        <div className="w-full rounded-2xl bg-[#090E26] border-1.5 border-[#2A3E7A] p-3.5 shadow-inner flex flex-col items-center mb-4">
+          <span className="text-[10px] font-extrabold uppercase text-[#8BA5F8] tracking-[0.2em] mb-0.5">
             {isClassic ? 'FINAL RUN SCORE' : 'STAGE SCORE'}
           </span>
-          <span className="text-3xl font-black text-white mt-0.5">
-            {score}
+
+          <span className="text-4xl font-black text-white tracking-tight drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)]">
+            {score.toLocaleString()}
           </span>
 
-          {isClassic && (
-            <span className="text-xs font-bold text-amber-400 mt-1">
-              Best: {bestScore}
-            </span>
+          {/* High Score / Best Record Pill */}
+          {bestScore > 0 && (
+            <div className="flex items-center space-x-1.5 mt-1.5 px-3 py-0.5 rounded-full bg-black/40 border border-amber-400/30">
+              <Trophy className="w-3.5 h-3.5 text-amber-400" />
+              <span className="text-xs font-black text-amber-300">
+                {isNewRecord ? 'NEW BEST RECORD!' : `Best: ${bestScore.toLocaleString()}`}
+              </span>
+            </div>
           )}
 
+          {/* Coins Earned Banner for Classic */}
           {isClassic && coinsEarned > 0 && (
-            <span className="text-xs font-black text-emerald-400 mt-1.5">
-              🪙 Earned: +{coinsEarned} coins
+            <div className="flex items-center space-x-1.5 mt-2 text-xs font-black text-emerald-400">
+              <span className="text-sm">🪙</span>
+              <span>Earned +{coinsEarned} Coins</span>
+            </div>
+          )}
+
+          {/* Classic Tier Reached */}
+          {isClassic && levelTierLabel && (
+            <span className="text-[10px] font-bold text-indigo-300 mt-1">
+              Rank Reached: <strong className="text-amber-300">{levelTierLabel}</strong>
             </span>
           )}
         </div>
 
-        {/* Retry Button */}
+        {/* Primary Action Button: 3D Glossy Replay Button */}
         <SmoziButton
-          text={isDaily ? 'Try Stage Again' : 'Play Again'}
-          style="RED"
+          text={isDaily ? '▶  RETRY STAGE' : '▶  PLAY AGAIN'}
+          style="GREEN"
           onClick={onRetry}
-          className="w-4/5 mt-2"
+          className="w-full py-3.5 text-base shadow-[0_8px_20px_rgba(52,199,89,0.4)]"
           testTag="game_over_retry_button"
         />
 
-        {/* Home Button */}
-        <SmoziIconButton
+        {/* Secondary Home Button */}
+        <button
           onClick={onHome}
-          style="BLUE"
-          size={42}
-          className="mt-4"
-          testTag="game_over_home_button"
+          className="flex items-center space-x-2 mt-3 px-4 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 text-white/70 hover:text-white transition-all cursor-pointer text-xs font-bold"
         >
-          <Home className="w-5 h-5 text-white" />
-        </SmoziIconButton>
+          <Home className="w-4 h-4" />
+          <span>Return to Menu</span>
+        </button>
       </div>
     </div>
   );
