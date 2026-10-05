@@ -25,8 +25,9 @@ export class GameOverEngine {
   }
 
   canPieceFitAnywhere(piece: Piece): boolean {
-    const maxStartRow = BoardEngine.BOARD_SIZE - piece.shape.height;
-    const maxStartCol = BoardEngine.BOARD_SIZE - piece.shape.width;
+    const size = this.boardEngine.size;
+    const maxStartRow = size - piece.shape.height;
+    const maxStartCol = size - piece.shape.width;
 
     if (maxStartRow < 0 || maxStartCol < 0) return false;
 

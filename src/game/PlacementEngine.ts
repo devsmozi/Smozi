@@ -20,6 +20,7 @@ export class PlacementEngine {
     const cellsToOccupy: [number, number][] = [];
 
     let isValid = true;
+    const size = this.boardEngine.size;
     for (let r = 0; r < matrix.length; r++) {
       for (let c = 0; c < matrix[r].length; c++) {
         if (matrix[r][c]) {
@@ -27,9 +28,9 @@ export class PlacementEngine {
           const boardC = targetCol + c;
           if (
             boardR < 0 ||
-            boardR >= BoardEngine.BOARD_SIZE ||
+            boardR >= size ||
             boardC < 0 ||
-            boardC >= BoardEngine.BOARD_SIZE
+            boardC >= size
           ) {
             isValid = false;
           } else {

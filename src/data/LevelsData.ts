@@ -27,12 +27,13 @@ function build50Levels(): LevelData[] {
     id: 1,
     worldId: 1,
     title: 'First Steps',
+    boardSize: 6, // Small 6x6 starting board - easy, friendly tutorial
     initialBoard: {},
-    objective: { type: ObjectiveType.CLEAR_COLOR, targetAmount: 10, currentAmount: 0, targetColor: BlockColorType.RED },
+    objective: { type: ObjectiveType.CLEAR_COLOR, targetAmount: 8, currentAmount: 0, targetColor: BlockColorType.RED },
     moveLimit: 25,
-    starThresholds: [400, 800, 1200],
-    rewardCoins: 100,
-    rewardGems: 2,
+    starThresholds: [300, 600, 900],
+    rewardCoins: 10,
+    rewardGems: 1,
     difficulty: 'Easy'
   });
 
@@ -40,12 +41,13 @@ function build50Levels(): LevelData[] {
     id: 2,
     worldId: 1,
     title: 'Clear the Line',
+    boardSize: 6, // 6x6 board
     initialBoard: {},
-    objective: { type: ObjectiveType.SCORE, targetAmount: 700, currentAmount: 0 },
+    objective: { type: ObjectiveType.SCORE, targetAmount: 500, currentAmount: 0 },
     moveLimit: 22,
-    starThresholds: [500, 900, 1300],
-    rewardCoins: 100,
-    rewardGems: 2,
+    starThresholds: [400, 750, 1100],
+    rewardCoins: 10,
+    rewardGems: 1,
     difficulty: 'Easy'
   });
 
@@ -53,12 +55,13 @@ function build50Levels(): LevelData[] {
     id: 3,
     worldId: 1,
     title: 'Azure Stream',
+    boardSize: 7, // 7x7 transition board
     initialBoard: {},
-    objective: { type: ObjectiveType.CLEAR_COLOR, targetAmount: 14, currentAmount: 0, targetColor: BlockColorType.BLUE },
+    objective: { type: ObjectiveType.CLEAR_COLOR, targetAmount: 12, currentAmount: 0, targetColor: BlockColorType.BLUE },
     moveLimit: 24,
-    starThresholds: [600, 1000, 1500],
-    rewardCoins: 120,
-    rewardGems: 2,
+    starThresholds: [500, 900, 1300],
+    rewardCoins: 12,
+    rewardGems: 1,
     difficulty: 'Easy'
   });
 
@@ -66,17 +69,18 @@ function build50Levels(): LevelData[] {
     id: 4,
     worldId: 1,
     title: 'Corner Stones',
+    boardSize: 7, // 7x7 board
     initialBoard: {
       '0,0': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
-      '0,7': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
-      '7,0': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
-      '7,7': obstacle(BlockColorType.NONE, SpecialBlockType.STONE)
+      '0,6': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
+      '6,0': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
+      '6,6': obstacle(BlockColorType.NONE, SpecialBlockType.STONE)
     },
     objective: { type: ObjectiveType.CLEAR_COLOR, targetAmount: 12, currentAmount: 0, targetColor: BlockColorType.YELLOW },
     moveLimit: 22,
-    starThresholds: [650, 1100, 1600],
-    rewardCoins: 120,
-    rewardGems: 2,
+    starThresholds: [550, 950, 1400],
+    rewardCoins: 12,
+    rewardGems: 1,
     difficulty: 'Medium'
   });
 
@@ -84,6 +88,7 @@ function build50Levels(): LevelData[] {
     id: 5,
     worldId: 1,
     title: 'Gem Cavern',
+    boardSize: 8, // Standard 8x8 board from level 5 onwards
     initialBoard: {
       '3,3': obstacle(BlockColorType.BLUE, SpecialBlockType.GEM_BLUE),
       '3,4': obstacle(BlockColorType.BLUE, SpecialBlockType.GEM_BLUE),
@@ -93,8 +98,8 @@ function build50Levels(): LevelData[] {
     objective: { type: ObjectiveType.COLLECT_GEMS, targetAmount: 4, currentAmount: 0 },
     moveLimit: 20,
     starThresholds: [700, 1200, 1800],
-    rewardCoins: 150,
-    rewardGems: 3,
+    rewardCoins: 15,
+    rewardGems: 2,
     difficulty: 'Medium'
   });
 
@@ -102,12 +107,18 @@ function build50Levels(): LevelData[] {
     id: 6,
     worldId: 1,
     title: 'Emerald Grove',
-    initialBoard: {},
-    objective: { type: ObjectiveType.CLEAR_COLOR, targetAmount: 16, currentAmount: 0, targetColor: BlockColorType.GREEN },
+    boardSize: 8,
+    initialBoard: {
+      '1,2': obstacle(BlockColorType.GREEN, SpecialBlockType.NONE),
+      '1,5': obstacle(BlockColorType.GREEN, SpecialBlockType.NONE),
+      '6,2': obstacle(BlockColorType.GREEN, SpecialBlockType.NONE),
+      '6,5': obstacle(BlockColorType.GREEN, SpecialBlockType.NONE)
+    },
+    objective: { type: ObjectiveType.CLEAR_COLOR, targetAmount: 14, currentAmount: 0, targetColor: BlockColorType.GREEN },
     moveLimit: 22,
-    starThresholds: [800, 1300, 1900],
-    rewardCoins: 150,
-    rewardGems: 3,
+    starThresholds: [750, 1250, 1800],
+    rewardCoins: 15,
+    rewardGems: 2,
     difficulty: 'Medium'
   });
 
@@ -115,6 +126,7 @@ function build50Levels(): LevelData[] {
     id: 7,
     worldId: 1,
     title: 'Timber Barricade',
+    boardSize: 8,
     initialBoard: {
       '2,2': obstacle(BlockColorType.NONE, SpecialBlockType.WOOD),
       '2,5': obstacle(BlockColorType.NONE, SpecialBlockType.WOOD),
@@ -123,9 +135,9 @@ function build50Levels(): LevelData[] {
     },
     objective: { type: ObjectiveType.CLEAR_SPECIAL, targetAmount: 4, currentAmount: 0, targetSpecial: SpecialBlockType.WOOD },
     moveLimit: 20,
-    starThresholds: [850, 1400, 2000],
-    rewardCoins: 160,
-    rewardGems: 3,
+    starThresholds: [800, 1300, 1900],
+    rewardCoins: 16,
+    rewardGems: 2,
     difficulty: 'Medium'
   });
 
@@ -133,6 +145,7 @@ function build50Levels(): LevelData[] {
     id: 8,
     worldId: 1,
     title: 'Ruby Cache',
+    boardSize: 8,
     initialBoard: {
       '1,3': obstacle(BlockColorType.RED, SpecialBlockType.GEM_RED),
       '1,4': obstacle(BlockColorType.RED, SpecialBlockType.GEM_RED),
@@ -141,9 +154,9 @@ function build50Levels(): LevelData[] {
     },
     objective: { type: ObjectiveType.COLLECT_GEMS, targetAmount: 4, currentAmount: 0 },
     moveLimit: 22,
-    starThresholds: [900, 1500, 2100],
-    rewardCoins: 180,
-    rewardGems: 3,
+    starThresholds: [850, 1400, 2000],
+    rewardCoins: 18,
+    rewardGems: 2,
     difficulty: 'Medium'
   });
 
@@ -151,12 +164,18 @@ function build50Levels(): LevelData[] {
     id: 9,
     worldId: 1,
     title: 'Sunset Canopy',
-    initialBoard: {},
-    objective: { type: ObjectiveType.CLEAR_COLOR, targetAmount: 18, currentAmount: 0, targetColor: BlockColorType.ORANGE },
+    boardSize: 8,
+    initialBoard: {
+      '0,3': obstacle(BlockColorType.ORANGE, SpecialBlockType.NONE),
+      '0,4': obstacle(BlockColorType.ORANGE, SpecialBlockType.NONE),
+      '7,3': obstacle(BlockColorType.ORANGE, SpecialBlockType.NONE),
+      '7,4': obstacle(BlockColorType.ORANGE, SpecialBlockType.NONE)
+    },
+    objective: { type: ObjectiveType.CLEAR_COLOR, targetAmount: 16, currentAmount: 0, targetColor: BlockColorType.ORANGE },
     moveLimit: 22,
-    starThresholds: [1000, 1600, 2200],
-    rewardCoins: 180,
-    rewardGems: 3,
+    starThresholds: [900, 1500, 2100],
+    rewardCoins: 18,
+    rewardGems: 2,
     difficulty: 'Hard'
   });
 
@@ -164,6 +183,7 @@ function build50Levels(): LevelData[] {
     id: 10,
     worldId: 1,
     title: 'Forest Warden',
+    boardSize: 8,
     initialBoard: {
       '2,3': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
       '2,4': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
@@ -172,11 +192,11 @@ function build50Levels(): LevelData[] {
       '3,2': obstacle(BlockColorType.GREEN, SpecialBlockType.GEM_GREEN),
       '4,5': obstacle(BlockColorType.GREEN, SpecialBlockType.GEM_GREEN)
     },
-    objective: { type: ObjectiveType.SCORE, targetAmount: 1500, currentAmount: 0 },
+    objective: { type: ObjectiveType.SCORE, targetAmount: 1400, currentAmount: 0 },
     moveLimit: 22,
-    starThresholds: [1200, 1800, 2500],
-    rewardCoins: 250,
-    rewardGems: 5,
+    starThresholds: [1000, 1600, 2300],
+    rewardCoins: 25,
+    rewardGems: 3,
     difficulty: 'Boss'
   });
 

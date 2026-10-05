@@ -26,6 +26,9 @@ import { SettingsDialog } from '../components/SettingsDialog.tsx';
 import { ClassicMilestoneDialog } from '../components/ClassicMilestoneDialog.tsx';
 import { DailyChallengeVictoryDialog } from '../components/DailyChallengeVictoryDialog.tsx';
 import { BoosterBar, ActiveBoosterMode } from '../components/BoosterBar.tsx';
+import { HintEngine, HintMove } from '../game/HintEngine.ts';
+import { BombExplosionEffect } from '../components/SmoziBoardView.tsx';
+import { CoinFlyAnimation, CoinFlightEvent } from '../components/CoinFlyAnimation.tsx';
 
 interface GameScreenProps {
   mode: GameMode;

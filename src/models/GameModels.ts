@@ -28,6 +28,7 @@ export interface LevelData {
   id: number;
   worldId: number;
   title: string;
+  boardSize?: number; // 6, 7, or 8 (starting levels are smaller and easy to play)
   initialBoard: Record<string, CellState>; // key format "row,col"
   objective: LevelObjective;
   moveLimit: number;
@@ -72,8 +73,8 @@ export const INITIAL_PLAYER_DATA: PlayerData = {
   playerName: 'Puzzle Master',
   avatarIcon: '👑',
   classicHighScore: 0,
-  coins: 1234,
-  gems: 50,
+  coins: 40, // Balanced initial coins: enough to try 1 bomb or 2 hints
+  gems: 10,
   lives: 5,
   currentLevel: 1,
   unlockedLevels: [1],

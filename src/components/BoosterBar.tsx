@@ -1,13 +1,15 @@
 import React from 'react';
-import { Hammer, Shuffle, Bomb, X } from 'lucide-react';
+import { Shuffle, Bomb, Lightbulb, X } from 'lucide-react';
 
-export type ActiveBoosterMode = 'NONE' | 'HAMMER' | 'BOMB';
+export type ActiveBoosterMode = 'NONE' | 'BOMB';
 
 interface BoosterBarProps {
   coins: number;
   activeBooster: ActiveBoosterMode;
   onSelectBooster: (mode: ActiveBoosterMode) => void;
   onTriggerShuffle: () => void;
+  onTriggerHint: () => void;
+  isHintActive?: boolean;
   className?: string;
 }
 
@@ -16,31 +18,29 @@ export const BoosterBar: React.FC<BoosterBarProps> = ({
   activeBooster,
   onSelectBooster,
   onTriggerShuffle,
+  onTriggerHint,
+  isHintActive = false,
   className = ''
 }) => {
-  const HAMMER_COST = 50;
-  const SHUFFLE_COST = 35;
-  const BOMB_COST = 80;
+  const HINT_COST = 15;
+  const SHUFFLE_COST = 25;
+  const BOMB_COST = 40;
 
-  const canAffordHammer = coins >= HAMMER_COST;
+  const canAffordHint = coins >= HINT_COST;
   const canAffordShuffle = coins >= SHUFFLE_COST;
   const canAffordBomb = coins >= BOMB_COST;
 
   return (
     <div
-      className={`w-full max-w-[420px] mx-auto flex items-center justify-between px-3 py-1.5 rounded-2xl bg-black/35 border border-white/10 backdrop-blur-xs select-none ${className}`}
+      className={`w-full max-w-[420px] mx-auto flex items-center justify-between px-3 py-1.5 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-xs select-none shadow-md ${className}`}
     >
-      {/* Active Booster Prompt */}
+      {/* Active Booster Prompt (Bomb Active) */}
       {activeBooster !== 'NONE' ? (
         <div className="w-full flex items-center justify-between px-2 animate-fade-in">
           <div className="flex items-center space-x-2">
-            <span className="text-sm animate-bounce">
-              {activeBooster === 'HAMMER' ? '🔨' : '💣'}
-            </span>
+            <span className="text-base animate-bounce">💣</span>
             <span className="text-xs font-black text-amber-300">
-              {activeBooster === 'HAMMER'
-                ? 'Tap any block to smash!'
-                : 'Tap to detonate 3x3 area!'}
+              Tap anywhere to detonate 3x3 blast!
             </span>
           </div>
           <button
@@ -53,60 +53,69 @@ export const BoosterBar: React.FC<BoosterBarProps> = ({
         </div>
       ) : (
         <>
-          <span className="text-[10px] font-black uppercase text-[#8BA5F8] tracking-widest pl-1 hidden sm:inline">
-            Power-Ups:
-          </span>
+          {/* Coin Wallet Indicator */}
+          <div className="flex items-center space-x-1 px-2 py-0.5 rounded-xl bg-black/40 border border-amber-400/25">
+            <span className="text-xs">🪙</span>
+            <span className="text-xs font-black text-amber-300 tracking-wide">
+              {coins.toLocaleString()}
+            </span>
+          </div>
 
-          <div className="flex items-center space-x-2 sm:space-x-3 mx-auto sm:mx-0">
-            {/* 1. Hammer Booster */}
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            {/* 1. HINT BOOSTER */}
             <button
-              onClick={() => onSelectBooster('HAMMER')}
-              disabled={!canAffordHammer}
+              onClick={onTriggerHint}
+              disabled={!canAffordHint && !isHintActive}
               className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-xl border transition-all cursor-pointer ${
-                canAffordHammer
+                isHintActive
+                  ? 'bg-amber-400/30 border-amber-400 text-amber-300 ring-2 ring-amber-400/50 scale-105 animate-pulse'
+                  : canAffordHint
                   ? 'bg-white/10 hover:bg-white/15 border-white/15 text-white active:scale-95'
-                  : 'bg-white/5 border-white/5 text-white/40 cursor-not-allowed'
+                  : 'bg-white/5 border-white/5 text-white/35 cursor-not-allowed'
               }`}
-              title="Smash any single block on the board"
+              title="Reveal best placement to clear lines"
             >
-              <Hammer className="w-3.5 h-3.5 text-amber-400" />
-              <div className="flex items-center space-x-0.5 text-[10px] font-black">
+              <Lightbulb className={`w-3.5 h-3.5 ${isHintActive ? 'text-yellow-300' : 'text-amber-400'}`} />
+              <span className="text-[11px] font-black hidden sm:inline">Hint</span>
+              <div className="flex items-center space-x-0.5 text-[10px] font-black text-amber-300">
                 <span>🪙</span>
-                <span>{HAMMER_COST}</span>
+                <span>{HINT_COST}</span>
               </div>
             </button>
 
-            {/* 2. Shuffle Booster */}
+            {/* 2. SHUFFLE BOOSTER */}
             <button
               onClick={onTriggerShuffle}
               disabled={!canAffordShuffle}
               className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-xl border transition-all cursor-pointer ${
                 canAffordShuffle
                   ? 'bg-white/10 hover:bg-white/15 border-white/15 text-white active:scale-95'
-                  : 'bg-white/5 border-white/5 text-white/40 cursor-not-allowed'
+                  : 'bg-white/5 border-white/5 text-white/35 cursor-not-allowed'
               }`}
-              title="Reroll all 3 pieces in the tray"
+              title="Reroll all 3 pieces with guaranteed fits"
             >
               <Shuffle className="w-3.5 h-3.5 text-blue-400" />
-              <div className="flex items-center space-x-0.5 text-[10px] font-black">
+              <span className="text-[11px] font-black hidden sm:inline">Reroll</span>
+              <div className="flex items-center space-x-0.5 text-[10px] font-black text-amber-300">
                 <span>🪙</span>
                 <span>{SHUFFLE_COST}</span>
               </div>
             </button>
 
-            {/* 3. Bomb Booster */}
+            {/* 3. BOMB BOOSTER */}
             <button
               onClick={() => onSelectBooster('BOMB')}
               disabled={!canAffordBomb}
               className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-xl border transition-all cursor-pointer ${
                 canAffordBomb
                   ? 'bg-white/10 hover:bg-white/15 border-white/15 text-white active:scale-95'
-                  : 'bg-white/5 border-white/5 text-white/40 cursor-not-allowed'
+                  : 'bg-white/5 border-white/5 text-white/35 cursor-not-allowed'
               }`}
               title="Blast a 3x3 area on the board"
             >
               <Bomb className="w-3.5 h-3.5 text-rose-400" />
-              <div className="flex items-center space-x-0.5 text-[10px] font-black">
+              <span className="text-[11px] font-black hidden sm:inline">Bomb</span>
+              <div className="flex items-center space-x-0.5 text-[10px] font-black text-amber-300">
                 <span>🪙</span>
                 <span>{BOMB_COST}</span>
               </div>

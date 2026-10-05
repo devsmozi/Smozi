@@ -3,17 +3,24 @@ import { Piece } from '../models/Piece.ts';
 
 export class BoardEngine {
   static readonly BOARD_SIZE = 8;
+  public size: number;
   private grid: CellState[][];
 
-  constructor() {
+  constructor(size: number = 8) {
+    this.size = size;
+    this.grid = this.initGrid();
+  }
+
+  resize(newSize: number): void {
+    this.size = newSize;
     this.grid = this.initGrid();
   }
 
   private initGrid(): CellState[][] {
     const arr: CellState[][] = [];
-    for (let r = 0; r < BoardEngine.BOARD_SIZE; r++) {
+    for (let r = 0; r < this.size; r++) {
       const row: CellState[] = [];
-      for (let c = 0; c < BoardEngine.BOARD_SIZE; c++) {
+      for (let c = 0; c < this.size; c++) {
         row.push(createEmptyCell(r, c));
       }
       arr.push(row);
@@ -26,24 +33,27 @@ export class BoardEngine {
   }
 
   getCell(row: number, col: number): CellState | null {
-    if (row < 0 || row >= BoardEngine.BOARD_SIZE || col < 0 || col >= BoardEngine.BOARD_SIZE) {
+    if (row < 0 || row >= this.size || col < 0 || col >= this.size) {
       return null;
     }
     return this.grid[row][col];
   }
 
   setCell(row: number, col: number, state: CellState): void {
-    if (row >= 0 && row < BoardEngine.BOARD_SIZE && col >= 0 && col < BoardEngine.BOARD_SIZE) {
+    if (row >= 0 && row < this.size && col >= 0 && col < this.size) {
       this.grid[row][col] = { ...state, row, col };
     }
   }
 
-  resetBoard(): void {
+  resetBoard(newSize?: number): void {
+    if (newSize && newSize !== this.size) {
+      this.size = newSize;
+    }
     this.grid = this.initGrid();
   }
 
   clearSingleCell(row: number, col: number): boolean {
-    if (row >= 0 && row < BoardEngine.BOARD_SIZE && col >= 0 && col < BoardEngine.BOARD_SIZE) {
+    if (row >= 0 && row < this.size && col >= 0 && col < this.size) {
       this.grid[row][col] = createEmptyCell(row, col);
       return true;
     }
@@ -54,7 +64,7 @@ export class BoardEngine {
     const cleared: [number, number][] = [];
     for (let r = centerRow - radius; r <= centerRow + radius; r++) {
       for (let c = centerCol - radius; c <= centerCol + radius; c++) {
-        if (r >= 0 && r < BoardEngine.BOARD_SIZE && c >= 0 && c < BoardEngine.BOARD_SIZE) {
+        if (r >= 0 && r < this.size && c >= 0 && c < this.size) {
           if (this.grid[r][c].isOccupied) {
             cleared.push([r, c]);
           }
@@ -65,13 +75,13 @@ export class BoardEngine {
     return cleared;
   }
 
-  loadInitialBoard(initialCells: Record<string, CellState>): void {
-    this.resetBoard();
+  loadInitialBoard(initialCells: Record<string, CellState>, boardSize?: number): void {
+    this.resetBoard(boardSize);
     for (const [key, cell] of Object.entries(initialCells)) {
       const [rStr, cStr] = key.split(',');
       const r = parseInt(rStr, 10);
       const c = parseInt(cStr, 10);
-      if (r >= 0 && r < BoardEngine.BOARD_SIZE && c >= 0 && c < BoardEngine.BOARD_SIZE) {
+      if (r >= 0 && r < this.size && c >= 0 && c < this.size) {
         this.grid[r][c] = { ...cell, row: r, col: c };
       }
     }
@@ -86,9 +96,9 @@ export class BoardEngine {
           const boardC = startCol + c;
           if (
             boardR < 0 ||
-            boardR >= BoardEngine.BOARD_SIZE ||
+            boardR >= this.size ||
             boardC < 0 ||
-            boardC >= BoardEngine.BOARD_SIZE
+            boardC >= this.size
           ) {
             return false;
           }
@@ -125,15 +135,15 @@ export class BoardEngine {
   }
 
   clearCell(row: number, col: number): void {
-    if (row >= 0 && row < BoardEngine.BOARD_SIZE && col >= 0 && col < BoardEngine.BOARD_SIZE) {
+    if (row >= 0 && row < this.size && col >= 0 && col < this.size) {
       this.grid[row][col] = createEmptyCell(row, col);
     }
   }
 
   clone(): BoardEngine {
-    const cloned = new BoardEngine();
-    for (let r = 0; r < BoardEngine.BOARD_SIZE; r++) {
-      for (let c = 0; c < BoardEngine.BOARD_SIZE; c++) {
+    const cloned = new BoardEngine(this.size);
+    for (let r = 0; r < this.size; r++) {
+      for (let c = 0; c < this.size; c++) {
         cloned.grid[r][c] = { ...this.grid[r][c] };
       }
     }

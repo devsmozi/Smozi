@@ -18,11 +18,12 @@ export class LineClearEngine {
   checkAndClearLines(): ClearResult {
     const completedRows: number[] = [];
     const completedCols: number[] = [];
+    const size = this.boardEngine.size;
 
     // 1. Check all rows
-    for (let r = 0; r < BoardEngine.BOARD_SIZE; r++) {
+    for (let r = 0; r < size; r++) {
       let rowComplete = true;
-      for (let c = 0; c < BoardEngine.BOARD_SIZE; c++) {
+      for (let c = 0; c < size; c++) {
         const cell = this.boardEngine.getCell(r, c);
         if (!cell || !cell.isOccupied) {
           rowComplete = false;
@@ -35,9 +36,9 @@ export class LineClearEngine {
     }
 
     // 2. Check all columns
-    for (let c = 0; c < BoardEngine.BOARD_SIZE; c++) {
+    for (let c = 0; c < size; c++) {
       let colComplete = true;
-      for (let r = 0; r < BoardEngine.BOARD_SIZE; r++) {
+      for (let r = 0; r < size; r++) {
         const cell = this.boardEngine.getCell(r, c);
         if (!cell || !cell.isOccupied) {
           colComplete = false;
