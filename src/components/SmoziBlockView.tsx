@@ -5,6 +5,7 @@ import { SpecialBlockType } from '../models/SpecialBlockType.ts';
 interface SmoziBlockViewProps {
   color: BlockColorType;
   specialType?: SpecialBlockType;
+  durability?: number;
   isClearing?: boolean;
   isPreview?: boolean;
   isDenied?: boolean;

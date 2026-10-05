@@ -7,6 +7,9 @@ interface SmoziTopHudProps {
   score: number;
   highScore: number;
   levelNumber: number;
+  levelTierLabel?: string;
+  stageNumber?: number;
+  stageDifficultyLabel?: string;
   objective?: LevelObjective;
   movesLeft: number;
   isNewHighScore?: boolean;
@@ -19,6 +22,9 @@ export const SmoziTopHud: React.FC<SmoziTopHudProps> = ({
   score,
   highScore,
   levelNumber,
+  levelTierLabel,
+  stageNumber,
+  stageDifficultyLabel,
   objective,
   movesLeft,
   isNewHighScore = false,
@@ -42,11 +48,27 @@ export const SmoziTopHud: React.FC<SmoziTopHudProps> = ({
           </span>
         </div>
 
-        {/* Adventure Level Indicator */}
+        {/* Mode Indicators */}
         {gameMode === GameMode.ADVENTURE && (
           <div className="px-3.5 py-1 rounded-full bg-[#1B2B54] border border-[#38559E] shadow-sm">
             <span className="text-sm font-bold text-white tracking-wide">
               Level {levelNumber}
+            </span>
+          </div>
+        )}
+
+        {gameMode === GameMode.DAILY_CHALLENGE && (
+          <div className="px-3.5 py-1 rounded-full bg-gradient-to-r from-purple-900 to-indigo-900 border border-purple-400/40 shadow-sm flex items-center space-x-1.5">
+            <span className="text-xs font-black text-amber-300">
+              Stage {stageNumber || 1}/3
+            </span>
+          </div>
+        )}
+
+        {gameMode === GameMode.CLASSIC && levelTierLabel && (
+          <div className="px-3 py-1 rounded-full bg-emerald-950/70 border border-emerald-500/40 shadow-sm">
+            <span className="text-xs font-extrabold text-emerald-300 tracking-wide">
+              {levelTierLabel}
             </span>
           </div>
         )}
@@ -76,8 +98,8 @@ export const SmoziTopHud: React.FC<SmoziTopHudProps> = ({
         </div>
       </div>
 
-      {/* Adventure Objective & Moves Left Bar */}
-      {gameMode === GameMode.ADVENTURE && objective && (
+      {/* Objective & Moves Left Bar (Adventure & Daily Challenge) */}
+      {(gameMode === GameMode.ADVENTURE || gameMode === GameMode.DAILY_CHALLENGE) && objective && (
         <div className="w-full max-w-[360px] mt-2 px-3 py-1.5 rounded-xl bg-black/25 border border-white/10 flex items-center justify-between text-xs font-bold">
           <div className="flex items-center space-x-2 text-indigo-200">
             <span>Target:</span>

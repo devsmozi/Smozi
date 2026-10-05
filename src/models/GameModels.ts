@@ -49,6 +49,8 @@ export interface Achievement {
 }
 
 export interface PlayerData {
+  playerName?: string;
+  avatarIcon?: string;
   classicHighScore: number;
   coins: number;
   gems: number;
@@ -67,6 +69,8 @@ export interface PlayerData {
 }
 
 export const INITIAL_PLAYER_DATA: PlayerData = {
+  playerName: 'Puzzle Master',
+  avatarIcon: '👑',
   classicHighScore: 0,
   coins: 1234,
   gems: 50,

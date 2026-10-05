@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <!-- Gold Metallic Primary Gradient -->
+    <linearGradient id="goldRim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE875"/>
+      <stop offset="25%" stop-color="#FFB300"/>
+      <stop offset="50%" stop-color="#E67E00"/>
+      <stop offset="75%" stop-color="#FFC83B"/>
+      <stop offset="100%" stop-color="#9C4400"/>
+    </linearGradient>
+
+    <!-- Warm Highlight Gradient -->
+    <linearGradient id="goldLight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFF9D2"/>
+      <stop offset="40%" stop-color="#FFD54F"/>
+      <stop offset="100%" stop-color="#FF8F00"/>
+    </linearGradient>
+
+    <!-- Dark Gold Shading -->
+    <linearGradient id="goldDark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#C96B00"/>
+      <stop offset="50%" stop-color="#7A3300"/>
+      <stop offset="100%" stop-color="#4E1E00"/>
+    </linearGradient>
+
+    <!-- Wing Gradient Left -->
+    <linearGradient id="wingGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E65100"/>
+      <stop offset="40%" stop-color="#FF9800"/>
+      <stop offset="80%" stop-color="#FFD54F"/>
+      <stop offset="100%" stop-color="#FFF59D"/>
+    </linearGradient>
+
+    <!-- Star Glow Gradient -->
+    <radialGradient id="starShine" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="35%" stop-color="#FFF176"/>
+      <stop offset="70%" stop-color="#FFB300"/>
+      <stop offset="100%" stop-color="#E65100"/>
+    </radialGradient>
+
+    <!-- Deep Drop Shadow -->
+    <filter id="shadowDepth" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadowDepth)">
+    <!-- BACK/OUTER GOLD WINGS (LEFT & RIGHT) -->
+    <!-- Left Wing Feathers -->
+    <path d="M 85 415 C 60 380 50 330 75 300 C 82 325 95 345 115 365 C 80 340 70 295 90 270 C 102 300 120 320 145 335 C 105 285 110 240 135 220 C 145 255 165 280 185 295 C 145 360 115 390 85 415 Z" fill="url(#wingGrad)" stroke="#B25900" stroke-width="3" stroke-linejoin="round"/>
+    
+    <!-- Right Wing Feathers -->
+    <path d="M 415 415 C 440 380 450 330 425 300 C 418 325 405 345 385 365 C 420 340 430 295 410 270 C 398 300 380 320 355 335 C 395 285 390 240 365 220 C 355 255 335 280 315 295 C 355 360 385 390 415 415 Z" fill="url(#wingGrad)" stroke="#B25900" stroke-width="3" stroke-linejoin="round"/>
+
+    <!-- Wing Highlight Lines -->
+    <path d="M 80 395 Q 110 350 140 330 M 75 340 Q 95 315 125 295 M 95 290 Q 120 270 145 255" fill="none" stroke="#FFF59D" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+    <path d="M 420 395 Q 390 350 360 330 M 425 340 Q 405 315 375 295 M 405 290 Q 380 270 355 255" fill="none" stroke="#FFF59D" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+
+    <!-- MAIN CHASSIS: TOP CARVED HORNS & CREST -->
+    <!-- Left Horn Outer -->
+    <path d="M 120 65 C 65 80 40 135 50 190 C 58 230 85 260 110 285 C 95 260 85 210 100 170 C 115 130 145 105 175 95 C 150 80 135 70 120 65 Z" fill="url(#goldRim)" stroke="#8A3D00" stroke-width="4"/>
+    
+    <!-- Left Horn Curl Scroll -->
+    <path d="M 115 95 C 75 105 65 145 80 175 C 95 205 135 205 145 175 C 155 145 135 125 115 130 C 100 135 100 155 112 160 C 122 165 130 155 125 145" fill="url(#goldLight)" stroke="#A04800" stroke-width="3.5" stroke-linecap="round"/>
+    
+    <!-- Right Horn Outer -->
+    <path d="M 380 65 C 435 80 460 135 450 190 C 442 230 415 260 390 285 C 405 260 415 210 400 170 C 385 130 355 105 325 95 C 350 80 365 70 380 65 Z" fill="url(#goldRim)" stroke="#8A3D00" stroke-width="4"/>
+
+    <!-- Right Horn Curl Scroll -->
+    <path d="M 385 95 C 425 105 435 145 420 175 C 405 205 365 205 355 175 C 345 145 365 125 385 130 C 400 135 400 155 388 160 C 378 165 370 155 375 145" fill="url(#goldLight)" stroke="#A04800" stroke-width="3.5" stroke-linecap="round"/>
+
+    <!-- Top Connecting Bridge & Tiara -->
+    <path d="M 170 95 C 210 115 290 115 330 95 C 310 130 270 145 250 145 C 230 145 190 130 170 95 Z" fill="url(#goldRim)" stroke="#9C4400" stroke-width="3"/>
+    <path d="M 230 100 L 250 80 L 270 100 C 260 105 240 105 230 100 Z" fill="#FFE266" stroke="#9C4400" stroke-width="2.5"/>
+
+    <!-- MAIN CIRCULAR FRAME RING -->
+    <!-- Heavy Outer Golden Ring -->
+    <path d="M 250 90 A 160 160 0 1 1 249.9 90 M 250 125 A 125 125 0 1 0 250.1 125" fill="url(#goldRim)" stroke="#7A3300" stroke-width="4" fill-rule="evenodd"/>
+
+    <!-- Inner Golden Bevel Trim -->
+    <circle cx="250" cy="250" r="125" fill="none" stroke="url(#goldDark)" stroke-width="6"/>
+    <circle cx="250" cy="250" r="121" fill="none" stroke="#FFE97D" stroke-width="2"/>
+
+    <!-- Specular Highlight Reflections on Outer Ring -->
+    <path d="M 185 125 A 145 145 0 0 1 250 105 A 145 145 0 0 1 315 125" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.85"/>
+    <ellipse cx="205" cy="135" rx="18" ry="7" transform="rotate(-30 205 135)" fill="#FFFFFF" opacity="0.95"/>
+    <ellipse cx="295" cy="135" rx="18" ry="7" transform="rotate(30 295 135)" fill="#FFFFFF" opacity="0.75"/>
+
+    <!-- Bottom Arc Ribbed Trim for Stars -->
+    <path d="M 130 350 C 160 410 200 445 250 448 C 300 445 340 410 370 350 C 350 400 310 435 250 435 C 190 435 150 400 130 350 Z" fill="url(#goldDark)"/>
+    <path d="M 140 370 C 170 420 210 448 250 450 C 290 448 330 420 360 370" fill="none" stroke="#FFA726" stroke-width="6" stroke-linecap="round"/>
+
+    <!-- 5 GOLDEN STARS ALONG BOTTOM CREST -->
+    <!-- Star 1 (Far Left, ~142, 380) -->
+    <g transform="translate(142, 380) rotate(-26) scale(0.65)">
+      <polygon points="0,-35 10,-10 35,-10 15,6 22,30 0,16 -22,30 -15,6 -35,-10 -10,-10" fill="url(#starShine)" stroke="#8A3D00" stroke-width="3" stroke-linejoin="round"/>
+      <polygon points="0,-22 5,-5 20,-5 8,4 12,20 0,10 -12,20 -8,4 -20,-5 -5,-5" fill="#FFFFFF" opacity="0.6"/>
+    </g>
+
+    <!-- Star 2 (Mid-Left, ~190, 420) -->
+    <g transform="translate(190, 420) rotate(-14) scale(0.78)">
+      <polygon points="0,-35 10,-10 35,-10 15,6 22,30 0,16 -22,30 -15,6 -35,-10 -10,-10" fill="url(#starShine)" stroke="#8A3D00" stroke-width="3" stroke-linejoin="round"/>
+      <polygon points="0,-22 5,-5 20,-5 8,4 12,20 0,10 -12,20 -8,4 -20,-5 -5,-5" fill="#FFFFFF" opacity="0.6"/>
+    </g>
+
+    <!-- Star 3 (Center Star, ~250, 435 - Largest) -->
+    <g transform="translate(250, 435) rotate(0) scale(0.95)">
+      <polygon points="0,-35 10,-10 35,-10 15,6 22,30 0,16 -22,30 -15,6 -35,-10 -10,-10" fill="url(#starShine)" stroke="#8A3D00" stroke-width="3.5" stroke-linejoin="round"/>
+      <polygon points="0,-22 5,-5 20,-5 8,4 12,20 0,10 -12,20 -8,4 -20,-5 -5,-5" fill="#FFFFFF" opacity="0.75"/>
+    </g>
+
+    <!-- Star 4 (Mid-Right, ~310, 420) -->
+    <g transform="translate(310, 420) rotate(14) scale(0.78)">
+      <polygon points="0,-35 10,-10 35,-10 15,6 22,30 0,16 -22,30 -15,6 -35,-10 -10,-10" fill="url(#starShine)" stroke="#8A3D00" stroke-width="3" stroke-linejoin="round"/>
+      <polygon points="0,-22 5,-5 20,-5 8,4 12,20 0,10 -12,20 -8,4 -20,-5 -5,-5" fill="#FFFFFF" opacity="0.6"/>
+    </g>
+
+    <!-- Star 5 (Far Right, ~358, 380) -->
+    <g transform="translate(358, 380) rotate(26) scale(0.65)">
+      <polygon points="0,-35 10,-10 35,-10 15,6 22,30 0,16 -22,30 -15,6 -35,-10 -10,-10" fill="url(#starShine)" stroke="#8A3D00" stroke-width="3" stroke-linejoin="round"/>
+      <polygon points="0,-22 5,-5 20,-5 8,4 12,20 0,10 -12,20 -8,4 -20,-5 -5,-5" fill="#FFFFFF" opacity="0.6"/>
+    </g>
+  </g>
+</svg>

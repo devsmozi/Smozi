@@ -78,6 +78,7 @@ export const App: React.FC = () => {
       {currentScreen === 'MENU' && (
         <MainMenuScreen
           playerData={playerData}
+          onUpdatePlayerData={handleUpdatePlayerData}
           onStartClassic={startClassicGame}
           onOpenAdventure={() => setCurrentScreen('ADVENTURE_MAP')}
           onStartDailyChallenge={startDailyChallenge}

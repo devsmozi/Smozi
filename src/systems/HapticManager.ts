@@ -45,4 +45,13 @@ export class HapticManager {
       } catch {}
     }
   }
+
+  explosion(): void {
+    if (!this.isEnabled) return;
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate([60, 30, 80, 40, 100]);
+      } catch {}
+    }
+  }
 }

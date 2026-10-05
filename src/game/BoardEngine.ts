@@ -42,6 +42,29 @@ export class BoardEngine {
     this.grid = this.initGrid();
   }
 
+  clearSingleCell(row: number, col: number): boolean {
+    if (row >= 0 && row < BoardEngine.BOARD_SIZE && col >= 0 && col < BoardEngine.BOARD_SIZE) {
+      this.grid[row][col] = createEmptyCell(row, col);
+      return true;
+    }
+    return false;
+  }
+
+  clearArea(centerRow: number, centerCol: number, radius: number = 1): [number, number][] {
+    const cleared: [number, number][] = [];
+    for (let r = centerRow - radius; r <= centerRow + radius; r++) {
+      for (let c = centerCol - radius; c <= centerCol + radius; c++) {
+        if (r >= 0 && r < BoardEngine.BOARD_SIZE && c >= 0 && c < BoardEngine.BOARD_SIZE) {
+          if (this.grid[r][c].isOccupied) {
+            cleared.push([r, c]);
+          }
+          this.grid[r][c] = createEmptyCell(r, c);
+        }
+      }
+    }
+    return cleared;
+  }
+
   loadInitialBoard(initialCells: Record<string, CellState>): void {
     this.resetBoard();
     for (const [key, cell] of Object.entries(initialCells)) {

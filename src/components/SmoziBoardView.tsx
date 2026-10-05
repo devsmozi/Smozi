@@ -16,6 +16,9 @@ interface SmoziBoardViewProps {
   clearingCells: [number, number][];
   skinTheme: SkinTheme;
   boardRef: React.RefObject<HTMLDivElement | null>;
+  isCrowded?: boolean;
+  onCellClick?: (r: number, c: number) => void;
+  onCellHover?: (r: number, c: number) => void;
   className?: string;
 }
 
@@ -28,6 +31,9 @@ export const SmoziBoardView: React.FC<SmoziBoardViewProps> = ({
   clearingCells,
   skinTheme,
   boardRef,
+  isCrowded = false,
+  onCellClick,
+  onCellHover,
   className = ''
 }) => {
   const clearingSet = new Set(clearingCells.map(([r, c]) => `${r},${c}`));
@@ -44,14 +50,25 @@ export const SmoziBoardView: React.FC<SmoziBoardViewProps> = ({
   return (
     <div
       ref={boardRef}
-      className={`relative w-full max-w-[420px] aspect-square mx-auto p-2 rounded-2xl shadow-2xl transition-colors duration-300 box-border select-none touch-none ${className}`}
+      className={`relative w-full max-w-[min(92vw,min(420px,calc(100dvh-265px)))] aspect-square mx-auto p-1.5 sm:p-2 rounded-2xl shadow-2xl transition-all duration-300 box-border select-none touch-none ${
+        isCrowded ? 'ring-2 ring-red-500/70 animate-pulse' : ''
+      } ${className}`}
       style={{
         backgroundColor: skinTheme.boardBackground,
-        border: `3px solid ${skinTheme.boardBorder}`,
-        boxShadow: `0 12px 30px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.5), 0 0 2px ${skinTheme.primaryAccent}`
+        border: `3px solid ${isCrowded ? '#FF3B30' : skinTheme.boardBorder}`,
+        boxShadow: isCrowded
+          ? '0 0 25px rgba(255, 59, 48, 0.45), inset 0 0 15px rgba(255, 59, 48, 0.3)'
+          : `0 12px 30px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.5), 0 0 2px ${skinTheme.primaryAccent}`
       }}
     >
-      <div className="w-full h-full grid grid-cols-8 grid-rows-8 gap-1 p-1">
+      {/* Danger Warning Banner if board is crowded */}
+      {isCrowded && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-rose-600 border border-white text-white text-[9px] font-black tracking-wider uppercase shadow-md pointer-events-none z-10 animate-bounce">
+          ⚠️ Space Critical
+        </div>
+      )}
+
+      <div className="w-full h-full grid grid-cols-8 grid-rows-8 gap-0.5 sm:gap-1 p-0.5 sm:p-1">
         {Array.from({ length: BoardEngine.BOARD_SIZE }).map((_, r) =>
           Array.from({ length: BoardEngine.BOARD_SIZE }).map((_, c) => {
             const cell = board[r]?.[c] || {
@@ -69,7 +86,9 @@ export const SmoziBoardView: React.FC<SmoziBoardViewProps> = ({
             return (
               <div
                 key={`${r}-${c}`}
-                className="relative w-full h-full flex items-center justify-center"
+                className="relative w-full h-full flex items-center justify-center cursor-pointer"
+                onClick={() => onCellClick && onCellClick(r, c)}
+                onPointerEnter={() => onCellHover && onCellHover(r, c)}
               >
                 {inPreview && !cell.isOccupied ? (
                   <SmoziBlockView
@@ -78,33 +97,22 @@ export const SmoziBoardView: React.FC<SmoziBoardViewProps> = ({
                     isPreview={true}
                     isDenied={!isPlacementValid}
                     emptyColor={skinTheme.emptyCellColor}
-                    gridLineColor={skinTheme.gridLineColor}
                   />
-                ) : cell.isOccupied ? (
+                ) : isCollisionDenied ? (
                   <SmoziBlockView
                     color={cell.color}
                     specialType={cell.specialType}
-                    isClearing={isClearing}
-                    isDenied={isCollisionDenied}
+                    durability={cell.durability}
+                    isDenied={true}
                     emptyColor={skinTheme.emptyCellColor}
-                    gridLineColor={skinTheme.gridLineColor}
                   />
                 ) : (
                   <SmoziBlockView
-                    color={BlockColorType.NONE}
-                    specialType={SpecialBlockType.NONE}
+                    color={cell.color}
+                    specialType={cell.specialType}
+                    durability={cell.durability}
+                    isClearing={isClearing}
                     emptyColor={skinTheme.emptyCellColor}
-                    gridLineColor={skinTheme.gridLineColor}
-                  />
-                )}
-
-                {/* Glowing clear line banner effect */}
-                {isClearing && (
-                  <div
-                    className="absolute inset-0 rounded-md border-2 border-white pointer-events-none animate-pulse-glow"
-                    style={{
-                      boxShadow: '0 0 15px rgba(255, 255, 255, 0.9), inset 0 0 10px rgba(255, 255, 255, 0.9)'
-                    }}
                   />
                 )}
               </div>

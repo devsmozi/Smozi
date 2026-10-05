@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#142154"/>
+      <stop offset="50%" stop-color="#090E29"/>
+      <stop offset="100%" stop-color="#040614"/>
+    </linearGradient>
+
+    <linearGradient id="cubeBlue" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3892FF"/>
+      <stop offset="100%" stop-color="#0052CC"/>
+    </linearGradient>
+
+    <linearGradient id="cubeGold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFE875"/>
+      <stop offset="40%" stop-color="#FFB300"/>
+      <stop offset="100%" stop-color="#E65100"/>
+    </linearGradient>
+
+    <linearGradient id="cubeRed" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FF6B6B"/>
+      <stop offset="100%" stop-color="#D91B1B"/>
+    </linearGradient>
+
+    <linearGradient id="cubeGreen" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#55EFC4"/>
+      <stop offset="100%" stop-color="#00B894"/>
+    </linearGradient>
+
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- App Icon Rounded Squircle Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+  <rect x="8" y="8" width="496" height="496" rx="104" fill="none" stroke="#2670E8" stroke-width="6" opacity="0.4"/>
+
+  <!-- Glowing Central Puzzle Grid (2x2) -->
+  <g transform="translate(106, 126)" filter="url(#glow)">
+    <!-- Top Left: Blue Jewel Block -->
+    <rect x="0" y="0" width="140" height="140" rx="28" fill="url(#cubeBlue)" stroke="#80B8FF" stroke-width="4"/>
+    <path d="M 12 12 L 128 12 Q 12 12 12 128 Z" fill="#FFFFFF" opacity="0.3"/>
+    <circle cx="70" cy="70" r="16" fill="#FFFFFF" opacity="0.25"/>
+
+    <!-- Top Right: Gold Crown Block -->
+    <rect x="160" y="0" width="140" height="140" rx="28" fill="url(#cubeGold)" stroke="#FFF099" stroke-width="4"/>
+    <path d="M 172 12 L 288 12 Q 172 12 172 128 Z" fill="#FFFFFF" opacity="0.4"/>
+    <text x="230" y="88" font-size="52" text-anchor="middle" fill="#FFFFFF">👑</text>
+
+    <!-- Bottom Left: Red Ruby Block -->
+    <rect x="0" y="160" width="140" height="140" rx="28" fill="url(#cubeRed)" stroke="#FFA3A3" stroke-width="4"/>
+    <path d="M 12 172 L 128 172 Q 12 172 12 288 Z" fill="#FFFFFF" opacity="0.3"/>
+    <circle cx="70" cy="230" r="16" fill="#FFFFFF" opacity="0.25"/>
+
+    <!-- Bottom Right: Emerald Green Block -->
+    <rect x="160" y="160" width="140" height="140" rx="28" fill="url(#cubeGreen)" stroke="#A8FFEB" stroke-width="4"/>
+    <path d="M 172 172 L 288 172 Q 172 172 172 288 Z" fill="#FFFFFF" opacity="0.35"/>
+    <text x="230" y="248" font-size="52" text-anchor="middle" fill="#FFFFFF">⭐</text>
+  </g>
+
+  <!-- Big Gold Crown Peak on Top -->
+  <g transform="translate(256, 105)">
+    <polygon points="0,-48 24,-12 60,-32 44,18 -44,18 -60,-32 -24,-12" fill="#FFD700" stroke="#FFF59D" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="0" cy="-50" r="7" fill="#FFFFFF"/>
+    <circle cx="60" cy="-34" r="6" fill="#FFFFFF"/>
+    <circle cx="-60" cy="-34" r="6" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Specular top curved glass sheen -->
+  <path d="M 32 32 Q 256 120 480 32 C 480 32 400 240 256 240 C 112 240 32 32 32 32 Z" fill="#FFFFFF" opacity="0.08" pointer-events-none/>
+</svg>
