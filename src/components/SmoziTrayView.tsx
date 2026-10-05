@@ -34,20 +34,31 @@ export const SmoziTrayView: React.FC<SmoziTrayViewProps> = ({
         return (
           <div
             key={slotIndex}
-            className={`flex-1 h-full mx-1 rounded-2xl flex items-center justify-center relative transition-all duration-150 ${
+            className={`flex-1 h-full mx-1 rounded-2xl flex items-center justify-center relative transition-all duration-300 ${
               isSelected
-                ? 'bg-amber-400/15 border-2 border-amber-400 shadow-[0_0_15px_rgba(255,200,0,0.35)] scale-105'
-                : 'border border-white/5 bg-black/15'
+                ? 'bg-amber-400/20 border-2 border-amber-300 shadow-[0_0_24px_rgba(255,200,0,0.45),inset_0_0_15px_rgba(255,200,0,0.2)] -translate-y-1.5 scale-[1.04]'
+                : 'border border-white/8 bg-black/20 hover:border-white/20'
             }`}
           >
+            {/* Ambient Pulsing Aura for Selected Slot */}
+            {isSelected && (
+              <>
+                <div className="absolute inset-0 rounded-2xl ring-2 ring-amber-400/80 animate-pulse pointer-events-none" />
+                <span className="absolute -top-1.5 -left-1.5 text-xs text-amber-300 animate-ping pointer-events-none">✦</span>
+                <span className="absolute -bottom-1.5 -right-1.5 text-xs text-yellow-300 animate-pulse pointer-events-none">✨</span>
+              </>
+            )}
+
             {piece ? (
               <div
-                className={`relative w-full h-full flex flex-col items-center justify-center cursor-grab active:cursor-grabbing touch-none transition-all ${
+                className={`relative w-full h-full flex flex-col items-center justify-center cursor-grab active:cursor-grabbing touch-none transition-all duration-200 ${
                   isBeingDragged
                     ? 'opacity-20 scale-95'
                     : !isPlayable
                     ? 'opacity-40 grayscale-[50%] cursor-not-allowed'
-                    : 'hover:scale-105 active:scale-95'
+                    : isSelected
+                    ? 'scale-105 animate-[bounce_2.5s_ease-in-out_infinite]'
+                    : 'hover:scale-108 active:scale-95'
                 }`}
                 onPointerDown={(e) => {
                   if (e.pointerType === 'mouse' && e.button !== 0) return;
@@ -70,13 +81,6 @@ export const SmoziTrayView: React.FC<SmoziTrayViewProps> = ({
                   </>
                 )}
 
-                {/* Selected Ring Sparkle */}
-                {isSelected && (
-                  <div className="absolute -top-2.5 px-2 py-0.5 rounded-full bg-amber-400 text-black text-[9px] font-black tracking-wide shadow-sm animate-bounce">
-                    READY
-                  </div>
-                )}
-
                 {/* Unplayable Hint */}
                 {!isPlayable && (
                   <div className="absolute -bottom-1 px-1.5 py-0.2 rounded-md bg-black/70 border border-white/10 text-rose-300 text-[8px] font-bold tracking-tight pointer-events-none">
@@ -84,7 +88,7 @@ export const SmoziTrayView: React.FC<SmoziTrayViewProps> = ({
                   </div>
                 )}
 
-                <div className="animate-pop-in pointer-events-none">
+                <div className="animate-pop-in pointer-events-none transition-transform duration-200">
                   <SmoziPieceView piece={piece} blockSize={22} />
                 </div>
 
@@ -94,7 +98,7 @@ export const SmoziTrayView: React.FC<SmoziTrayViewProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="w-12 h-12 rounded-xl border border-white/5 bg-white/[0.02]" />
+              <div className="w-12 h-12 rounded-xl border border-white/5 bg-white/[0.02] shadow-inner transition-opacity duration-300" />
             )}
           </div>
         );

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GameMode, LevelObjective } from '../models/GameModels.ts';
 import { Settings } from 'lucide-react';
 
@@ -31,6 +31,25 @@ export const SmoziTopHud: React.FC<SmoziTopHudProps> = ({
   onPauseClick,
   className = ''
 }) => {
+  const [isBumping, setIsBumping] = useState(false);
+  const [showSparkles, setShowSparkles] = useState(false);
+  const prevScoreRef = useRef(score);
+
+  useEffect(() => {
+    if (score > prevScoreRef.current) {
+      setIsBumping(true);
+      setShowSparkles(true);
+      const timer = setTimeout(() => setIsBumping(false), 250);
+      const sparkleTimer = setTimeout(() => setShowSparkles(false), 600);
+      prevScoreRef.current = score;
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(sparkleTimer);
+      };
+    }
+    prevScoreRef.current = score;
+  }, [score]);
+
   return (
     <div
       className={`w-full max-w-[440px] mx-auto px-4 py-2 flex flex-col items-center select-none ${className}`}
@@ -65,14 +84,6 @@ export const SmoziTopHud: React.FC<SmoziTopHudProps> = ({
           </div>
         )}
 
-        {gameMode === GameMode.CLASSIC && levelTierLabel && (
-          <div className="px-3 py-1 rounded-full bg-emerald-950/70 border border-emerald-500/40 shadow-sm">
-            <span className="text-xs font-extrabold text-emerald-300 tracking-wide">
-              {levelTierLabel}
-            </span>
-          </div>
-        )}
-
         {/* Settings gear with red notification dot */}
         <button
           onClick={onPauseClick}
@@ -86,15 +97,34 @@ export const SmoziTopHud: React.FC<SmoziTopHudProps> = ({
         </button>
       </div>
 
-      {/* Giant white score */}
-      <div className="flex flex-col items-center mt-1">
-        {isNewHighScore && (
-          <span className="text-blue-400 text-lg font-black animate-bounce">
-            ◆ NEW HIGH SCORE ◆
-          </span>
+      {/* Compact Animated Score Section */}
+      <div className="relative flex items-center justify-center my-0.5 select-none min-h-[36px]">
+        {/* Animated Floating Sparkles upon score tick */}
+        {showSparkles && (
+          <div className="absolute -inset-x-6 -inset-y-2 pointer-events-none flex items-center justify-between">
+            <span className="text-amber-300 text-xs animate-ping">✨</span>
+            <span className="text-cyan-300 text-xs animate-bounce">✦</span>
+            <span className="text-yellow-200 text-[10px] animate-pulse">⭐</span>
+          </div>
         )}
-        <div className="text-5xl font-black text-white tracking-tight drop-shadow-md transition-transform duration-150">
-          {score}
+
+        {/* New High Score Compact Glowing Crown Pill */}
+        {isNewHighScore && (
+          <div className="absolute -top-3 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black text-[9px] font-black uppercase tracking-wider shadow-sm flex items-center space-x-1 animate-bounce z-10">
+            <span>👑</span>
+            <span>BEST!</span>
+          </div>
+        )}
+
+        {/* Score Number with Pop & Glow Animation */}
+        <div
+          className={`font-black text-3xl sm:text-4xl text-white tracking-tight leading-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] transition-all duration-150 ${
+            isBumping
+              ? 'scale-115 text-yellow-300 drop-shadow-[0_0_12px_rgba(255,215,0,0.85)]'
+              : 'scale-100'
+          }`}
+        >
+          {score.toLocaleString()}
         </div>
       </div>
 

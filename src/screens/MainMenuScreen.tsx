@@ -6,7 +6,8 @@ import { UserProfileFrame } from '../components/UserProfileFrame.tsx';
 import { UserProfileDialog } from '../components/UserProfileDialog.tsx';
 import { DailyQuestsDialog } from '../components/DailyQuestsDialog.tsx';
 import { PWAInstallButton } from '../components/PWAInstallButton.tsx';
-import { Settings, Gift, Trophy, Target } from 'lucide-react';
+import { getSkinTheme } from '../models/SkinTheme.ts';
+import { Settings, Gift, Trophy, Target, Play, Compass } from 'lucide-react';
 
 interface MainMenuScreenProps {
   playerData: PlayerData;
@@ -45,60 +46,75 @@ export const MainMenuScreen: React.FC<MainMenuScreenProps> = ({
     onUpdatePlayerData(updated);
   };
 
+  const currentSkin = getSkinTheme(playerData.selectedTheme);
+
   return (
-    <div className="w-full h-full min-h-screen bg-gradient-to-b from-[#0D163D] via-[#090E29] to-[#050819] flex flex-col justify-between p-4 sm:p-5 select-none max-w-md mx-auto">
+    <div
+      className="w-full h-full min-h-screen flex flex-col justify-between p-4 sm:p-5 select-none max-w-md mx-auto transition-all duration-300"
+      style={{
+        background: currentSkin.backgroundGradient
+      }}
+    >
       {/* Top Bar: Player profile & Currency pills */}
       <div className="w-full flex items-center justify-between">
-        {/* Golden Crest Player Profile Badge */}
+        {/* Golden Cartouche Player Profile Badge */}
         <button
           onClick={() => setShowProfile(true)}
-          className="flex items-center space-x-2 px-2 py-1 rounded-full bg-[#131D4A] border-1.5 border-[#2670E8] shadow-md hover:bg-[#1C2B66] active:scale-95 transition-all cursor-pointer group"
+          className="relative group overflow-hidden flex items-center space-x-2 pl-1.5 pr-3 py-1 rounded-full bg-gradient-to-r from-[#172559] to-[#0D153B] border-2 border-[#FFD700] shadow-[0_4px_12px_rgba(0,0,0,0.5),inset_0_1px_2px_rgba(255,255,255,0.4)] hover:brightness-110 active:scale-95 transition-all cursor-pointer"
           title="Open Player Profile"
         >
+          {/* Subtle specular sheen */}
+          <div className="absolute top-0 left-3 right-3 h-1/2 rounded-t-full bg-gradient-to-b from-white/25 to-transparent pointer-events-none" />
+
           <UserProfileFrame
-            size={40}
+            size={38}
             avatarIcon={playerData.avatarIcon || '👑'}
           />
-          <div className="flex flex-col text-left leading-tight pr-2">
-            <span className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors">
-              {playerData.playerName || 'Player'}
+          <div className="flex flex-col text-left leading-tight pr-1">
+            <span className="text-xs font-black text-white group-hover:text-amber-300 transition-colors drop-shadow-sm flex items-center space-x-1">
+              <span>{playerData.playerName || 'Player'}</span>
+              <span className="text-[10px] text-amber-300 opacity-80">✦</span>
             </span>
-            <span className="text-[10px] font-extrabold text-[#FFD700]">
-              Lv {playerData.currentLevel}
+            <span className="text-[9px] font-black text-[#FFD700] tracking-wider uppercase">
+              Level {playerData.currentLevel}
             </span>
           </div>
         </button>
 
-        {/* Currency & Actions */}
+        {/* Currency & Actions Container */}
         <div className="flex items-center space-x-1.5 sm:space-x-2">
-          {/* PWA Install Button (shows only if installable or iOS) */}
+          {/* PWA Install Button (Creative 3D Emerald Capsule) */}
           <PWAInstallButton />
 
-          {/* Coins */}
-          <div className="flex items-center space-x-1 px-2.5 py-1.5 rounded-2xl bg-[#131D4A] border-1.5 border-[#FFD700] shadow-md">
-            <span className="text-sm">🪙</span>
-            <span className="text-xs font-black text-[#FFE680]">
-              {playerData.coins}
+          {/* 3D Golden Coins Capsule */}
+          <div className="relative overflow-hidden flex items-center space-x-1 px-2.5 py-1.5 rounded-2xl bg-gradient-to-b from-[#1E2958] to-[#0E1538] border-2 border-[#FFD700] shadow-[0_3px_8px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.3)]">
+            <div className="absolute top-0 left-1 right-1 h-1/2 rounded-t-xl bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
+            <span className="text-xs drop-shadow-sm animate-pulse">🪙</span>
+            <span className="text-xs font-black text-[#FFE680] drop-shadow-sm tracking-tight">
+              {playerData.coins.toLocaleString()}
             </span>
           </div>
 
-          {/* Gems */}
-          <div className="flex items-center space-x-1 px-2 py-1.5 rounded-2xl bg-[#131D4A] border-1.5 border-[#007AFF] shadow-md">
-            <span className="text-sm">💎</span>
-            <span className="text-xs font-black text-[#68B1FF]">
-              {playerData.gems}
+          {/* 3D Sapphire Gems Capsule */}
+          <div className="relative overflow-hidden flex items-center space-x-1 px-2.5 py-1.5 rounded-2xl bg-gradient-to-b from-[#16275A] to-[#0A1333] border-2 border-[#38B6FF] shadow-[0_3px_8px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.3)]">
+            <div className="absolute top-0 left-1 right-1 h-1/2 rounded-t-xl bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
+            <span className="text-xs drop-shadow-sm">💎</span>
+            <span className="text-xs font-black text-[#8AE3FF] drop-shadow-sm tracking-tight">
+              {playerData.gems.toLocaleString()}
             </span>
           </div>
 
-          {/* Settings Button */}
-          <SmoziIconButton
+          {/* Creative Royal Gear Settings Button */}
+          <button
             onClick={onOpenSettings}
-            style="PURPLE"
-            size={36}
-            testTag="menu_settings_button"
+            data-testid="menu_settings_button"
+            className="relative group overflow-hidden w-9 h-9 rounded-2xl bg-gradient-to-b from-[#9C27B0] via-[#7B1FA2] to-[#4A148C] border-2 border-[#E1BEE7] shadow-[0_4px_10px_rgba(123,31,162,0.45),inset_0_1px_2px_rgba(255,255,255,0.5)] flex items-center justify-center text-white hover:brightness-110 active:translate-y-0.5 transition-all cursor-pointer"
+            title="Game Settings"
           >
-            <Settings className="w-4 h-4 text-white" />
-          </SmoziIconButton>
+            {/* Top specular curve */}
+            <div className="absolute top-0 left-1 right-1 h-2/5 rounded-t-xl bg-gradient-to-b from-white/35 to-transparent pointer-events-none" />
+            <Settings className="w-4 h-4 text-white group-hover:rotate-90 transition-transform duration-300 drop-shadow-sm" />
+          </button>
         </div>
       </div>
 
@@ -110,66 +126,84 @@ export const MainMenuScreen: React.FC<MainMenuScreenProps> = ({
         </span>
       </div>
 
-      {/* Main Game Mode Buttons */}
+      {/* Main Game Mode Buttons: Clean, Simple, Bold 3D Candy Arcade Style */}
       <div className="w-full flex flex-col space-y-3.5 my-auto">
-        <SmoziButton
-          text="▶  CLASSIC"
-          style="GREEN"
+        {/* 1. CLASSIC BUTTON */}
+        <button
           onClick={onStartClassic}
-          className="w-full py-4 text-lg"
-          testTag="menu_play_classic_button"
-        />
+          data-testid="menu_play_classic_button"
+          className="relative group overflow-hidden w-full py-4 px-6 rounded-2xl bg-gradient-to-b from-[#4CD964] via-[#34C759] to-[#248A3D] border-2 border-[#A3FFAE] shadow-[0_6px_0_#175927,0_10px_16px_rgba(0,0,0,0.4)] active:translate-y-1 active:shadow-[0_2px_0_#175927,0_4px_8px_rgba(0,0,0,0.4)] transition-all cursor-pointer flex items-center justify-center space-x-3 text-white select-none"
+        >
+          {/* Specular curved highlight */}
+          <div className="absolute top-0 left-2 right-2 h-1/2 rounded-t-xl bg-gradient-to-b from-white/35 to-transparent pointer-events-none" />
+          <Play className="w-6 h-6 fill-current text-white drop-shadow-md group-hover:scale-110 transition-transform" />
+          <span className="font-black text-xl tracking-wider text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.4)]">
+            CLASSIC
+          </span>
+        </button>
 
-        <SmoziButton
-          text="🗺️  ADVENTURE"
-          style="YELLOW_ORANGE"
+        {/* 2. ADVENTURE BUTTON */}
+        <button
           onClick={onOpenAdventure}
-          className="w-full py-4 text-lg"
-          testTag="menu_play_adventure_button"
-        />
+          data-testid="menu_play_adventure_button"
+          className="relative group overflow-hidden w-full py-4 px-6 rounded-2xl bg-gradient-to-b from-[#FFCC00] via-[#FF9500] to-[#CC6D00] border-2 border-[#FFE885] shadow-[0_6px_0_#804400,0_10px_16px_rgba(0,0,0,0.4)] active:translate-y-1 active:shadow-[0_2px_0_#804400,0_4px_8px_rgba(0,0,0,0.4)] transition-all cursor-pointer flex items-center justify-center space-x-3 text-white select-none"
+        >
+          {/* Specular curved highlight */}
+          <div className="absolute top-0 left-2 right-2 h-1/2 rounded-t-xl bg-gradient-to-b from-white/35 to-transparent pointer-events-none" />
+          <Compass className="w-6 h-6 text-white drop-shadow-md group-hover:rotate-45 transition-transform" />
+          <span className="font-black text-xl tracking-wider text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.4)]">
+            ADVENTURE
+          </span>
+        </button>
 
-        <SmoziButton
-          text="🏆  DAILY CHALLENGE"
-          style="PURPLE"
+        {/* 3. DAILY CHALLENGE BUTTON */}
+        <button
           onClick={onStartDailyChallenge}
-          className="w-full py-4 text-lg"
-          testTag="menu_play_daily_button"
-        />
+          data-testid="menu_play_daily_button"
+          className="relative group overflow-hidden w-full py-4 px-6 rounded-2xl bg-gradient-to-b from-[#AF52DE] via-[#8944AB] to-[#5A1E7A] border-2 border-[#E8B4F8] shadow-[0_6px_0_#3F1356,0_10px_16px_rgba(0,0,0,0.4)] active:translate-y-1 active:shadow-[0_2px_0_#3F1356,0_4px_8px_rgba(0,0,0,0.4)] transition-all cursor-pointer flex items-center justify-center space-x-3 text-white select-none"
+        >
+          {/* Specular curved highlight */}
+          <div className="absolute top-0 left-2 right-2 h-1/2 rounded-t-xl bg-gradient-to-b from-white/35 to-transparent pointer-events-none" />
+          <Trophy className="w-6 h-6 text-yellow-300 drop-shadow-md group-hover:scale-110 transition-transform" />
+          <span className="font-black text-xl tracking-wider text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.4)]">
+            DAILY CHALLENGE
+          </span>
+        </button>
       </div>
 
       {/* Bottom Actions: Daily Reward, Quests & Achievements */}
-      <div className="w-full grid grid-cols-3 gap-2 pt-2">
+      <div className="w-full grid grid-cols-3 gap-2 pt-1">
         {/* Daily Reward Button */}
         <button
           onClick={onOpenDailyReward}
-          className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-1.5 py-2 px-1 rounded-2xl bg-[#131D4A] border border-[#FF9500]/60 shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer text-center"
+          className="relative overflow-hidden flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-1.5 py-2.5 px-1.5 rounded-2xl bg-gradient-to-b from-[#182352] to-[#0A102E] border-1.5 border-[#FF9500] shadow-[0_3px_8px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.2)] hover:brightness-110 active:translate-y-0.5 transition-all cursor-pointer text-center"
         >
           <div className="w-7 h-7 rounded-xl bg-gradient-to-b from-[#FFCC00] to-[#FF9500] flex items-center justify-center text-white shadow-sm shrink-0">
             <Gift className="w-3.5 h-3.5" />
           </div>
-          <span className="text-[11px] font-bold text-white truncate">Daily Gift</span>
+          <span className="text-[11px] font-black text-white truncate">Daily Gift</span>
         </button>
 
         {/* Daily Missions / Quests Button */}
         <button
           onClick={() => setShowQuests(true)}
-          className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-1.5 py-2 px-1 rounded-2xl bg-[#131D4A] border border-[#2670E8]/60 shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer text-center"
+          className="relative overflow-hidden flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-1.5 py-2.5 px-1.5 rounded-2xl bg-gradient-to-b from-[#182352] to-[#0A102E] border-1.5 border-[#2670E8] shadow-[0_3px_8px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.2)] hover:brightness-110 active:translate-y-0.5 transition-all cursor-pointer text-center"
         >
           <div className="w-7 h-7 rounded-xl bg-gradient-to-b from-[#2670E8] to-[#1447A8] flex items-center justify-center text-white shadow-sm shrink-0">
             <Target className="w-3.5 h-3.5 text-amber-300" />
           </div>
-          <span className="text-[11px] font-bold text-white truncate">Missions</span>
+          <span className="text-[11px] font-black text-white truncate">Missions</span>
         </button>
 
         {/* Achievements Button */}
         <button
           onClick={onOpenAchievements}
-          className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-1.5 py-2 px-1 rounded-2xl bg-[#131D4A] border border-[#AF52DE]/60 shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer text-center"
+          className="relative overflow-hidden flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-1.5 py-2.5 px-1.5 rounded-2xl bg-gradient-to-b from-[#182352] to-[#0A102E] border-1.5 border-[#AF52DE] shadow-[0_3px_8px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.2)] hover:brightness-110 active:translate-y-0.5 transition-all cursor-pointer text-center"
         >
           <div className="w-7 h-7 rounded-xl bg-gradient-to-b from-[#AF52DE] to-[#7A21AA] flex items-center justify-center text-white shadow-sm shrink-0">
             <Trophy className="w-3.5 h-3.5" />
           </div>
-          <span className="text-[11px] font-bold text-white truncate">Trophies</span>
+          <span className="text-[11px] font-black text-white truncate">Trophies</span>
         </button>
       </div>
 

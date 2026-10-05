@@ -775,7 +775,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
   return (
     <div
-      className="relative w-full h-[100dvh] max-h-[100dvh] flex flex-col justify-between p-2 sm:p-3 select-none touch-none overflow-hidden max-w-lg mx-auto"
+      className="relative w-full h-[100dvh] max-h-[100dvh] flex flex-col justify-start p-2 sm:p-3 select-none touch-none overflow-hidden max-w-lg mx-auto"
       style={{
         background: currentSkin.backgroundGradient
       }}
@@ -795,7 +795,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       />
 
       {/* 2. Responsive 8x8 Board Chassis with Danger Glow */}
-      <div className="w-full flex-1 flex items-center justify-center my-auto px-1">
+      <div className="w-full flex items-center justify-center my-1 sm:my-2 px-1 shrink-0">
         <SmoziBoardView
           board={board}
           previewPiece={activeDraggingPiece || activeSelectedPiece}
@@ -811,8 +811,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         />
       </div>
 
-      {/* Play Store Power-Ups & Boosters */}
-      <div className="w-full px-2 py-1">
+      {/* Play Store Power-Ups & Boosters - placed in the space directly under the board */}
+      <div className="w-full px-2 py-1 shrink-0">
         <BoosterBar
           coins={playerData.coins}
           activeBooster={activeBooster}
@@ -821,15 +821,20 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         />
       </div>
 
-      {/* 3. Responsive Piece Tray with Playability & Selection Status */}
-      <SmoziTrayView
-        pieces={trayPieces}
-        activeDraggingPieceId={activeDraggingPiece?.id || null}
-        selectedSlotIndex={selectedSlotIndex}
-        piecePlayableStatus={piecePlayableStatus}
-        onPieceDragStart={handlePieceDragStart}
-        onPieceClick={handleTrayPieceClick}
-      />
+      {/* 3. Responsive Piece Tray - placed under board & boosters for ergonomic reach */}
+      <div className="w-full px-1 py-1 shrink-0">
+        <SmoziTrayView
+          pieces={trayPieces}
+          activeDraggingPieceId={activeDraggingPiece?.id || null}
+          selectedSlotIndex={selectedSlotIndex}
+          piecePlayableStatus={piecePlayableStatus}
+          onPieceDragStart={handlePieceDragStart}
+          onPieceClick={handleTrayPieceClick}
+        />
+      </div>
+
+      {/* Empty space under blocks selection as requested */}
+      <div className="w-full flex-1 min-h-2 sm:min-h-6 pointer-events-none" />
 
       {/* Full-screen top-level Dragging Piece Overlay */}
       {activeDraggingPiece && dragPos && boardRef.current && (

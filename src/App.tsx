@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GameMode, PlayerData } from './models/GameModels.ts';
+import { getSkinTheme } from './models/SkinTheme.ts';
 import { AudioManager } from './systems/AudioManager.ts';
 import { HapticManager } from './systems/HapticManager.ts';
 import { SaveManager } from './systems/SaveManager.ts';
@@ -70,11 +71,17 @@ export const App: React.FC = () => {
     handleUpdatePlayerData(updated);
     audioManagerRef.current.playGemCollect();
     hapticManagerRef.current.celebration();
-    setShowDailyReward(false);
   };
 
+  const currentSkin = getSkinTheme(playerData.selectedTheme);
+
   return (
-    <div className="w-full h-full min-h-screen bg-[#090E29] text-white overflow-hidden select-none">
+    <div
+      className="w-full h-full min-h-screen text-white overflow-hidden select-none transition-colors duration-300"
+      style={{
+        background: currentSkin.backgroundGradient
+      }}
+    >
       {currentScreen === 'MENU' && (
         <MainMenuScreen
           playerData={playerData}
