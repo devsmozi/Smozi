@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- SMOZI 4-block puzzle piece composition with glossy bevels and gold crown -->
+    <!-- Safe zone is centered around 54, 54 -->
+
+    <!-- Top Left: Red Block -->
+    <group android:pivotX="42" android:pivotY="42">
+        <!-- Shadow / border -->
+        <path
+            android:fillColor="#FF990022"
+            android:pathData="M 32,32 H 49 A 4,4 0 0 1 53,36 V 53 A 4,4 0 0 1 49,57 H 32 A 4,4 0 0 1 28,53 V 36 A 4,4 0 0 1 32,32 Z" />
+        <!-- Main body -->
+        <path
+            android:fillColor="#FFFF2D55"
+            android:pathData="M 32,33 H 48 A 3,3 0 0 1 51,36 V 51 A 3,3 0 0 1 48,54 H 32 A 3,3 0 0 1 29,51 V 36 A 3,3 0 0 1 32,33 Z" />
+        <!-- Top bevel gloss -->
+        <path
+            android:fillColor="#66FFFFFF"
+            android:pathData="M 32,34 H 48 A 2,2 0 0 1 50,36 V 40 L 46,43 H 34 L 30,40 V 36 A 2,2 0 0 1 32,34 Z" />
+    </group>
+
+    <!-- Top Right: Yellow Block -->
+    <group android:pivotX="66" android:pivotY="42">
+        <path
+            android:fillColor="#FFB38600"
+            android:pathData="M 59,32 H 76 A 4,4 0 0 1 80,36 V 53 A 4,4 0 0 1 76,57 H 59 A 4,4 0 0 1 55,53 V 36 A 4,4 0 0 1 59,32 Z" />
+        <path
+            android:fillColor="#FFFFCC00"
+            android:pathData="M 59,33 H 75 A 3,3 0 0 1 78,36 V 51 A 3,3 0 0 1 75,54 H 59 A 3,3 0 0 1 56,51 V 36 A 3,3 0 0 1 59,33 Z" />
+        <path
+            android:fillColor="#66FFFFFF"
+            android:pathData="M 59,34 H 75 A 2,2 0 0 1 77,36 V 40 L 73,43 H 61 L 57,40 V 36 A 2,2 0 0 1 59,34 Z" />
+    </group>
+
+    <!-- Bottom Left: Blue Block -->
+    <group android:pivotX="42" android:pivotY="66">
+        <path
+            android:fillColor="#FF0044BB"
+            android:pathData="M 32,59 H 49 A 4,4 0 0 1 53,63 V 80 A 4,4 0 0 1 49,84 H 32 A 4,4 0 0 1 28,80 V 63 A 4,4 0 0 1 32,59 Z" />
+        <path
+            android:fillColor="#FF007AFF"
+            android:pathData="M 32,60 H 48 A 3,3 0 0 1 51,63 V 78 A 3,3 0 0 1 48,81 H 32 A 3,3 0 0 1 29,78 V 63 A 3,3 0 0 1 32,60 Z" />
+        <path
+            android:fillColor="#66FFFFFF"
+            android:pathData="M 32,61 H 48 A 2,2 0 0 1 50,63 V 67 L 46,70 H 34 L 30,67 V 63 A 2,2 0 0 1 32,61 Z" />
+    </group>
+
+    <!-- Bottom Right: Green Block -->
+    <group android:pivotX="66" android:pivotY="66">
+        <path
+            android:fillColor="#FF1E7E1E"
+            android:pathData="M 59,59 H 76 A 4,4 0 0 1 80,63 V 80 A 4,4 0 0 1 76,84 H 59 A 4,4 0 0 1 55,83 V 63 A 4,4 0 0 1 59,59 Z" />
+        <path
+            android:fillColor="#FF34C759"
+            android:pathData="M 59,60 H 75 A 3,3 0 0 1 78,63 V 78 A 3,3 0 0 1 75,81 H 59 A 3,3 0 0 1 56,78 V 63 A 3,3 0 0 1 59,60 Z" />
+        <path
+            android:fillColor="#66FFFFFF"
+            android:pathData="M 59,61 H 75 A 2,2 0 0 1 77,63 V 67 L 73,70 H 61 L 57,67 V 63 A 2,2 0 0 1 59,61 Z" />
+    </group>
+
+    <!-- Golden Crown over the top-right block -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M 60,40 L 63,49 L 71,49 L 74,40 L 69,44 L 67,37 L 65,44 Z" />
+    <path
+        android:fillColor="#FFF59E0B"
+        android:pathData="M 63,49 H 71 V 52 H 63 Z" />
+
+    <!-- Sparkle Stars -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M 27,27 L 28,30 L 31,31 L 28,32 L 27,35 L 26,32 L 23,31 L 26,30 Z" />
+    <path
+        android:fillColor="#FFFFEE55"
+        android:pathData="M 81,25 L 82,27 L 84,28 L 82,29 L 81,31 L 80,29 L 78,28 L 80,27 Z" />
+</vector>

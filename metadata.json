@@ -1,0 +1,6 @@
+{
+  "name": "SMOZI",
+  "description": "Premium mobile block puzzle game featuring classic endless mode, 96 adventure levels, special power-up blocks, and rich tactile gameplay.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
