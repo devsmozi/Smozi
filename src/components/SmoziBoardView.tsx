@@ -130,6 +130,7 @@ export const SmoziBoardView: React.FC<SmoziBoardViewProps> = ({
                     isPreview={true}
                     isDenied={!isPlacementValid}
                     emptyColor={skinTheme.emptyCellColor}
+                    target={cell.target}
                   />
                 ) : (
                   <SmoziBlockView
@@ -139,6 +140,7 @@ export const SmoziBoardView: React.FC<SmoziBoardViewProps> = ({
                     isOccupied={cell.isOccupied}
                     isClearing={isClearing}
                     emptyColor={skinTheme.emptyCellColor}
+                    target={cell.target}
                   />
                 )}
               </div>

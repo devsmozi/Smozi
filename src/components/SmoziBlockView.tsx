@@ -1,6 +1,8 @@
 import React from 'react';
 import { BLOCK_COLORS, BlockColorType } from '../models/BlockColor.ts';
 import { SpecialBlockType } from '../models/SpecialBlockType.ts';
+import { BoardTarget } from '../models/TargetModels.ts';
+import { TargetIconView } from './TargetIconView.tsx';
 
 interface SmoziBlockViewProps {
   color: BlockColorType;
@@ -14,6 +16,7 @@ interface SmoziBlockViewProps {
   gridLineColor?: string;
   className?: string;
   size?: number | string;
+  target?: BoardTarget | null;
 }
 
 export const SmoziBlockView: React.FC<SmoziBlockViewProps> = ({
@@ -26,8 +29,98 @@ export const SmoziBlockView: React.FC<SmoziBlockViewProps> = ({
   emptyColor = '#141D33',
   gridLineColor = '#1A2645',
   className = '',
-  size = '100%'
+  size = '100%',
+  target = null
 }) => {
+  // If cell holds an uncollected target and is not occupied by a placed block:
+  const hasActiveTarget = target && !target.collected;
+
+  if (hasActiveTarget && (!isOccupied || isPreview)) {
+    const previewColorDef = isPreview
+      ? (isDenied ? BLOCK_COLORS[BlockColorType.RED] : BLOCK_COLORS[color] || BLOCK_COLORS[BlockColorType.BLUE])
+      : null;
+
+    return (
+      <div
+        className={`relative box-border rounded-md select-none transition-transform duration-150 ${className}`}
+        style={{
+          width: size,
+          height: size,
+          backgroundColor: '#C9945B',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.4), inset 0 0 4px rgba(0,0,0,0.3)'
+        }}
+      >
+        {/* 3D Wooden Bevel Borders */}
+        {/* Top Wood Bevel */}
+        <div
+          className="absolute top-0 left-0 right-0 h-[18%] pointer-events-none rounded-t-md"
+          style={{
+            background: 'linear-gradient(to bottom, #ECD0A8, #D8A66E)',
+            clipPath: 'polygon(0% 0%, 100% 0%, 82% 100%, 18% 100%)'
+          }}
+        />
+        {/* Left Wood Bevel */}
+        <div
+          className="absolute top-0 left-0 bottom-0 w-[18%] pointer-events-none rounded-l-md"
+          style={{
+            background: 'linear-gradient(to right, #ECD0A8, #C9945B)',
+            clipPath: 'polygon(0% 0%, 100% 18%, 100% 82%, 0% 100%)'
+          }}
+        />
+        {/* Right Wood Bevel */}
+        <div
+          className="absolute top-0 right-0 bottom-0 w-[18%] pointer-events-none rounded-r-md"
+          style={{
+            background: 'linear-gradient(to left, #8E5B28, #C9945B)',
+            clipPath: 'polygon(100% 0%, 100% 100%, 0% 82%, 0% 18%)'
+          }}
+        />
+        {/* Bottom Wood Bevel */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-[18%] pointer-events-none rounded-b-md"
+          style={{
+            background: 'linear-gradient(to top, #7A491D, #C9945B)',
+            clipPath: 'polygon(0% 100%, 18% 0%, 82% 0%, 100% 100%)'
+          }}
+        />
+
+        {/* Sunken Wooden Plateau with warm wood tone */}
+        <div
+          className="absolute inset-[18%] rounded-[3px] pointer-events-none flex items-center justify-center overflow-hidden"
+          style={{
+            backgroundColor: '#B57C40',
+            boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.5)'
+          }}
+        >
+          {/* Target Icon */}
+          <TargetIconView
+            targetType={target.type}
+            visualAsset={target.visualAsset}
+            className="w-full h-full"
+          />
+        </div>
+
+        {/* Dark outer frame */}
+        <div className="absolute inset-0 rounded-md border border-black/35 pointer-events-none" />
+
+        {/* Drag Preview Ghost overlay if dragging piece over target cell */}
+        {isPreview && previewColorDef && (
+          <div
+            className={`absolute inset-0 rounded-md border-2 z-10 flex items-center justify-center pointer-events-none ${
+              isDenied
+                ? 'bg-red-600/50 border-red-500'
+                : 'bg-emerald-400/40 border-emerald-300'
+            }`}
+          >
+            {!isDenied && (
+              <span className="text-white text-xs font-black animate-ping">✦</span>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   const isNone =
     (isOccupied !== undefined && !isOccupied && specialType === SpecialBlockType.NONE) ||
     (color === BlockColorType.NONE && specialType === SpecialBlockType.NONE);

@@ -1,5 +1,6 @@
 import { CellState, createEmptyCell } from '../models/CellState.ts';
 import { Piece } from '../models/Piece.ts';
+import { TargetConfig } from '../models/TargetModels.ts';
 
 export class BoardEngine {
   static readonly BOARD_SIZE = 8;
@@ -87,6 +88,25 @@ export class BoardEngine {
     }
   }
 
+  loadTargets(targets: TargetConfig[]): void {
+    targets.forEach((t, idx) => {
+      if (t.row >= 0 && t.row < this.size && t.column >= 0 && t.column < this.size) {
+        const existing = this.grid[t.row][t.column];
+        this.grid[t.row][t.column] = {
+          ...existing,
+          target: {
+            targetId: `target_${t.row}_${t.column}_${idx}`,
+            row: t.row,
+            column: t.column,
+            type: t.type,
+            collected: false,
+            visualAsset: t.visualAsset
+          }
+        };
+      }
+    });
+  }
+
   canPlace(piece: Piece, startRow: number, startCol: number): boolean {
     const matrix = piece.shape.matrix;
     for (let r = 0; r < matrix.length; r++) {
@@ -119,7 +139,9 @@ export class BoardEngine {
         if (matrix[r][c]) {
           const boardR = startRow + r;
           const boardC = startCol + c;
+          const existing = this.grid[boardR][boardC];
           this.grid[boardR][boardC] = {
+            ...existing,
             row: boardR,
             col: boardC,
             isOccupied: true,
@@ -136,7 +158,11 @@ export class BoardEngine {
 
   clearCell(row: number, col: number): void {
     if (row >= 0 && row < this.size && col >= 0 && col < this.size) {
-      this.grid[row][col] = createEmptyCell(row, col);
+      const existing = this.grid[row][col];
+      this.grid[row][col] = {
+        ...createEmptyCell(row, col),
+        target: existing.target
+      };
     }
   }
 
@@ -144,7 +170,10 @@ export class BoardEngine {
     const cloned = new BoardEngine(this.size);
     for (let r = 0; r < this.size; r++) {
       for (let c = 0; c < this.size; c++) {
-        cloned.grid[r][c] = { ...this.grid[r][c] };
+        cloned.grid[r][c] = {
+          ...this.grid[r][c],
+          target: this.grid[r][c].target ? { ...this.grid[r][c].target! } : undefined
+        };
       }
     }
     return cloned;

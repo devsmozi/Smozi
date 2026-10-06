@@ -1,6 +1,7 @@
 import { BlockColorType } from './BlockColor.ts';
 import { CellState } from './CellState.ts';
 import { SpecialBlockType } from './SpecialBlockType.ts';
+import { TargetConfig } from './TargetModels.ts';
 
 export enum GameMode {
   CLASSIC = 'CLASSIC',
@@ -30,8 +31,11 @@ export interface LevelData {
   title: string;
   boardSize?: number; // 6, 7, or 8 (starting levels are smaller and easy to play)
   initialBoard: Record<string, CellState>; // key format "row,col"
-  objective: LevelObjective;
-  moveLimit: number;
+  targetType?: string;
+  targetCount?: number;
+  targets?: TargetConfig[];
+  objective?: LevelObjective;
+  moveLimit?: number;
   rewardCoins: number;
   rewardGems: number;
   starThresholds: [number, number, number];

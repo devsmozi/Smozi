@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GameMode, LevelObjective } from '../models/GameModels.ts';
 import { Settings } from 'lucide-react';
+import { TargetIconView } from './TargetIconView.tsx';
 
 interface SmoziTopHudProps {
   gameMode: GameMode;
@@ -12,6 +13,8 @@ interface SmoziTopHudProps {
   stageDifficultyLabel?: string;
   objective?: LevelObjective;
   movesLeft: number;
+  remainingTargetsByType?: Record<string, number>;
+  totalRemainingTargets?: number;
   isNewHighScore?: boolean;
   onPauseClick: () => void;
   className?: string;
@@ -27,6 +30,8 @@ export const SmoziTopHud: React.FC<SmoziTopHudProps> = ({
   stageDifficultyLabel,
   objective,
   movesLeft,
+  remainingTargetsByType,
+  totalRemainingTargets,
   isNewHighScore = false,
   onPauseClick,
   className = ''
@@ -128,8 +133,27 @@ export const SmoziTopHud: React.FC<SmoziTopHudProps> = ({
         </div>
       </div>
 
-      {/* Objective & Moves Left Bar (Adventure & Daily Challenge) */}
-      {(gameMode === GameMode.ADVENTURE || gameMode === GameMode.DAILY_CHALLENGE) && objective && (
+      {/* Adventure Mode Target Objective Display (Bubble Block reference gameplay) */}
+      {gameMode === GameMode.ADVENTURE && remainingTargetsByType && Object.keys(remainingTargetsByType).length > 0 && (
+        <div className="w-full max-w-[360px] mt-1.5 px-4 py-1.5 rounded-2xl bg-black/35 border border-white/15 flex items-center justify-around shadow-lg">
+          {Object.entries(remainingTargetsByType).map(([tType, count]) => (
+            <div key={tType} className="flex items-center space-x-2.5">
+              <div className="w-9 h-9 flex items-center justify-center filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
+                <TargetIconView targetType={tType} size={32} />
+              </div>
+              <div className="flex flex-col items-start leading-none">
+                <span className="text-[10px] uppercase font-bold text-indigo-300">Remaining</span>
+                <span className={`text-xl font-black tracking-tight ${count === 0 ? 'text-emerald-400' : 'text-white'}`}>
+                  {count}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Daily Challenge Stage Objective & Moves */}
+      {gameMode === GameMode.DAILY_CHALLENGE && objective && (
         <div className="w-full max-w-[360px] mt-2 px-3 py-1.5 rounded-xl bg-black/25 border border-white/10 flex items-center justify-between text-xs font-bold">
           <div className="flex items-center space-x-2 text-indigo-200">
             <span>Target:</span>

@@ -1,6 +1,6 @@
 import { BlockColorType } from '../models/BlockColor.ts';
 import { CellState } from '../models/CellState.ts';
-import { LevelData, ObjectiveType } from '../models/GameModels.ts';
+import { LevelData, LevelObjective, ObjectiveType } from '../models/GameModels.ts';
 import { SpecialBlockType } from '../models/SpecialBlockType.ts';
 
 function createBoardCell(
@@ -21,6 +21,8 @@ export interface DailyStageConfig extends LevelData {
   stageNumber: number; // 1, 2, or 3
   stageDifficultyLabel?: string;
   appreciationQuote: string;
+  objective: LevelObjective;
+  moveLimit: number;
 }
 
 export function getDailyChallengeStages(): DailyStageConfig[] {

@@ -1,5 +1,6 @@
 import { BlockColorType } from './BlockColor.ts';
 import { SpecialBlockType } from './SpecialBlockType.ts';
+import { BoardTarget } from './TargetModels.ts';
 
 export interface CellState {
   row: number;
@@ -11,6 +12,7 @@ export interface CellState {
   isClearing?: boolean;
   isHighlighted?: boolean;
   isPossiblePlacement?: boolean;
+  target?: BoardTarget | null;
 }
 
 export function createEmptyCell(row: number, col: number): CellState {

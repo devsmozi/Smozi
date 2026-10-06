@@ -2,6 +2,7 @@ import { BlockColorType } from '../models/BlockColor.ts';
 import { CellState } from '../models/CellState.ts';
 import { LevelData, ObjectiveType } from '../models/GameModels.ts';
 import { SpecialBlockType } from '../models/SpecialBlockType.ts';
+import { TargetConfig } from '../models/TargetModels.ts';
 
 function obstacle(
   color: BlockColorType = BlockColorType.NONE,
@@ -17,183 +18,288 @@ function obstacle(
   };
 }
 
+function target(row: number, column: number, type: string = 'diamond', visualAsset?: string): TargetConfig {
+  return { row, column, type, visualAsset };
+}
+
+/**
+ * Generates fair, validated, reachable target positions for a level board.
+ * Ensures targets are placed strictly within grid boundaries and never on top
+ * of immovable obstacle blocks.
+ */
+function generatePatternTargets(
+  boardSize: number,
+  count: number,
+  types: string[],
+  initialBoard: Record<string, CellState> = {},
+  seed: number = 1
+): TargetConfig[] {
+  const result: TargetConfig[] = [];
+  const occupiedSet = new Set(Object.keys(initialBoard));
+
+  const candidateCoords: [number, number][] = [];
+  const minCoord = 1;
+  const maxCoord = boardSize - 2;
+
+  for (let r = minCoord; r <= maxCoord; r++) {
+    for (let c = minCoord; c <= maxCoord; c++) {
+      if (!occupiedSet.has(`${r},${c}`)) {
+        candidateCoords.push([r, c]);
+      }
+    }
+  }
+
+  // Deterministic shuffle using level seed
+  for (let i = candidateCoords.length - 1; i > 0; i--) {
+    const rawVal = Math.sin(seed * 733 + i * 37) * 10000;
+    const rnd = rawVal - Math.floor(rawVal);
+    const j = Math.floor(rnd * (i + 1));
+    const temp = candidateCoords[i];
+    candidateCoords[i] = candidateCoords[j];
+    candidateCoords[j] = temp;
+  }
+
+  const actualCount = Math.min(count, candidateCoords.length);
+  for (let i = 0; i < actualCount; i++) {
+    const [r, c] = candidateCoords[i];
+    const targetType = types[i % types.length];
+    result.push({ row: r, column: c, type: targetType });
+  }
+
+  return result;
+}
+
 function build50Levels(): LevelData[] {
   const list: LevelData[] = [];
 
   // ==========================================
   // WORLD 1: EMERALD FOREST (Levels 1 to 10)
   // ==========================================
+
+  // Level 1: 1 Diamond (Gentle tutorial)
   list.push({
     id: 1,
     worldId: 1,
-    title: 'First Steps',
-    boardSize: 6, // Small 6x6 starting board - easy, friendly tutorial
+    title: 'First Diamond',
+    boardSize: 6,
     initialBoard: {},
-    objective: { type: ObjectiveType.CLEAR_COLOR, targetAmount: 8, currentAmount: 0, targetColor: BlockColorType.RED },
-    moveLimit: 25,
+    targetType: 'diamond',
+    targets: [target(2, 2, 'diamond')],
+    targetCount: 1,
+    objective: { type: ObjectiveType.COLLECT_GEMS, targetAmount: 1, currentAmount: 0 },
     starThresholds: [300, 600, 900],
     rewardCoins: 10,
     rewardGems: 1,
     difficulty: 'Easy'
   });
 
+  // Level 2: 2 Diamonds
   list.push({
     id: 2,
     worldId: 1,
-    title: 'Clear the Line',
-    boardSize: 6, // 6x6 board
+    title: 'Twin Jewels',
+    boardSize: 6,
     initialBoard: {},
-    objective: { type: ObjectiveType.SCORE, targetAmount: 500, currentAmount: 0 },
-    moveLimit: 22,
+    targetType: 'diamond',
+    targets: [target(2, 2, 'diamond'), target(3, 3, 'diamond')],
+    targetCount: 2,
+    objective: { type: ObjectiveType.COLLECT_GEMS, targetAmount: 2, currentAmount: 0 },
     starThresholds: [400, 750, 1100],
     rewardCoins: 10,
     rewardGems: 1,
     difficulty: 'Easy'
   });
 
+  // Level 3: 3 Yellow Gems
   list.push({
     id: 3,
     worldId: 1,
-    title: 'Azure Stream',
-    boardSize: 7, // 7x7 transition board
+    title: 'Golden Trio',
+    boardSize: 7,
     initialBoard: {},
-    objective: { type: ObjectiveType.CLEAR_COLOR, targetAmount: 12, currentAmount: 0, targetColor: BlockColorType.BLUE },
-    moveLimit: 24,
+    targetType: 'yellow_gem',
+    targets: [target(2, 3, 'yellow_gem'), target(4, 2, 'yellow_gem'), target(4, 4, 'yellow_gem')],
+    targetCount: 3,
+    objective: { type: ObjectiveType.COLLECT_GEMS, targetAmount: 3, currentAmount: 0 },
     starThresholds: [500, 900, 1300],
     rewardCoins: 12,
     rewardGems: 1,
     difficulty: 'Easy'
   });
 
+  // Level 4: 4 Red Stars
   list.push({
     id: 4,
     worldId: 1,
-    title: 'Corner Stones',
-    boardSize: 7, // 7x7 board
+    title: 'Four Stars',
+    boardSize: 7,
     initialBoard: {
       '0,0': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
       '0,6': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
       '6,0': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
       '6,6': obstacle(BlockColorType.NONE, SpecialBlockType.STONE)
     },
-    objective: { type: ObjectiveType.CLEAR_COLOR, targetAmount: 12, currentAmount: 0, targetColor: BlockColorType.YELLOW },
-    moveLimit: 22,
+    targetType: 'red_star',
+    targets: [
+      target(2, 2, 'red_star'),
+      target(2, 4, 'red_star'),
+      target(4, 2, 'red_star'),
+      target(4, 4, 'red_star')
+    ],
+    targetCount: 4,
+    objective: { type: ObjectiveType.COLLECT_GEMS, targetAmount: 4, currentAmount: 0 },
     starThresholds: [550, 950, 1400],
     rewardCoins: 12,
     rewardGems: 1,
     difficulty: 'Medium'
   });
 
+  // Level 5: 5 Blue Diamonds
   list.push({
     id: 5,
     worldId: 1,
     title: 'Gem Cavern',
-    boardSize: 8, // Standard 8x8 board from level 5 onwards
-    initialBoard: {
-      '3,3': obstacle(BlockColorType.BLUE, SpecialBlockType.GEM_BLUE),
-      '3,4': obstacle(BlockColorType.BLUE, SpecialBlockType.GEM_BLUE),
-      '4,3': obstacle(BlockColorType.BLUE, SpecialBlockType.GEM_BLUE),
-      '4,4': obstacle(BlockColorType.BLUE, SpecialBlockType.GEM_BLUE)
-    },
-    objective: { type: ObjectiveType.COLLECT_GEMS, targetAmount: 4, currentAmount: 0 },
-    moveLimit: 20,
+    boardSize: 8,
+    initialBoard: {},
+    targetType: 'diamond',
+    targets: [
+      target(2, 2, 'diamond'),
+      target(2, 5, 'diamond'),
+      target(5, 2, 'diamond'),
+      target(5, 5, 'diamond'),
+      target(3, 3, 'diamond')
+    ],
+    targetCount: 5,
+    objective: { type: ObjectiveType.COLLECT_GEMS, targetAmount: 5, currentAmount: 0 },
     starThresholds: [700, 1200, 1800],
     rewardCoins: 15,
     rewardGems: 2,
     difficulty: 'Medium'
   });
 
+  // Level 6: 6 Golden Stars
   list.push({
     id: 6,
     worldId: 1,
-    title: 'Emerald Grove',
+    title: 'Starry Cross',
     boardSize: 8,
-    initialBoard: {
-      '1,2': obstacle(BlockColorType.GREEN, SpecialBlockType.NONE),
-      '1,5': obstacle(BlockColorType.GREEN, SpecialBlockType.NONE),
-      '6,2': obstacle(BlockColorType.GREEN, SpecialBlockType.NONE),
-      '6,5': obstacle(BlockColorType.GREEN, SpecialBlockType.NONE)
-    },
-    objective: { type: ObjectiveType.CLEAR_COLOR, targetAmount: 14, currentAmount: 0, targetColor: BlockColorType.GREEN },
-    moveLimit: 22,
+    initialBoard: {},
+    targetType: 'star',
+    targets: [
+      target(2, 3, 'star'),
+      target(3, 2, 'star'),
+      target(3, 4, 'star'),
+      target(4, 3, 'star'),
+      target(1, 3, 'star'),
+      target(5, 3, 'star')
+    ],
+    targetCount: 6,
+    objective: { type: ObjectiveType.COLLECT_GEMS, targetAmount: 6, currentAmount: 0 },
     starThresholds: [750, 1250, 1800],
     rewardCoins: 15,
     rewardGems: 2,
     difficulty: 'Medium'
   });
 
+  // Level 7: 7 Green Gems
   list.push({
     id: 7,
     worldId: 1,
-    title: 'Timber Barricade',
+    title: 'Emerald Ring',
     boardSize: 8,
-    initialBoard: {
-      '2,2': obstacle(BlockColorType.NONE, SpecialBlockType.WOOD),
-      '2,5': obstacle(BlockColorType.NONE, SpecialBlockType.WOOD),
-      '5,2': obstacle(BlockColorType.NONE, SpecialBlockType.WOOD),
-      '5,5': obstacle(BlockColorType.NONE, SpecialBlockType.WOOD)
-    },
-    objective: { type: ObjectiveType.CLEAR_SPECIAL, targetAmount: 4, currentAmount: 0, targetSpecial: SpecialBlockType.WOOD },
-    moveLimit: 20,
+    initialBoard: {},
+    targetType: 'green_gem',
+    targets: [
+      target(2, 2, 'green_gem'),
+      target(2, 5, 'green_gem'),
+      target(5, 2, 'green_gem'),
+      target(5, 5, 'green_gem'),
+      target(3, 2, 'green_gem'),
+      target(3, 5, 'green_gem'),
+      target(4, 3, 'green_gem')
+    ],
+    targetCount: 7,
+    objective: { type: ObjectiveType.COLLECT_GEMS, targetAmount: 7, currentAmount: 0 },
     starThresholds: [800, 1300, 1900],
     rewardCoins: 16,
     rewardGems: 2,
     difficulty: 'Medium'
   });
 
+  // Level 8: 6 Pig Obstacles (Pig obstacle asset introduction)
   list.push({
     id: 8,
     worldId: 1,
-    title: 'Ruby Cache',
+    title: 'Piggy Meadow',
     boardSize: 8,
-    initialBoard: {
-      '1,3': obstacle(BlockColorType.RED, SpecialBlockType.GEM_RED),
-      '1,4': obstacle(BlockColorType.RED, SpecialBlockType.GEM_RED),
-      '6,3': obstacle(BlockColorType.RED, SpecialBlockType.GEM_RED),
-      '6,4': obstacle(BlockColorType.RED, SpecialBlockType.GEM_RED)
-    },
-    objective: { type: ObjectiveType.COLLECT_GEMS, targetAmount: 4, currentAmount: 0 },
-    moveLimit: 22,
+    initialBoard: {},
+    targetType: 'pig',
+    targets: [
+      target(2, 2, 'pig'),
+      target(2, 5, 'pig'),
+      target(5, 2, 'pig'),
+      target(5, 5, 'pig'),
+      target(3, 3, 'pig'),
+      target(4, 4, 'pig')
+    ],
+    targetCount: 6,
+    objective: { type: ObjectiveType.COLLECT_GEMS, targetAmount: 6, currentAmount: 0 },
     starThresholds: [850, 1400, 2000],
     rewardCoins: 18,
     rewardGems: 2,
     difficulty: 'Medium'
   });
 
+  // Level 9: 7 Stick Obstacles (Stick obstacle asset introduction)
   list.push({
     id: 9,
     worldId: 1,
-    title: 'Sunset Canopy',
+    title: 'Twig Forest',
     boardSize: 8,
-    initialBoard: {
-      '0,3': obstacle(BlockColorType.ORANGE, SpecialBlockType.NONE),
-      '0,4': obstacle(BlockColorType.ORANGE, SpecialBlockType.NONE),
-      '7,3': obstacle(BlockColorType.ORANGE, SpecialBlockType.NONE),
-      '7,4': obstacle(BlockColorType.ORANGE, SpecialBlockType.NONE)
-    },
-    objective: { type: ObjectiveType.CLEAR_COLOR, targetAmount: 16, currentAmount: 0, targetColor: BlockColorType.ORANGE },
-    moveLimit: 22,
+    initialBoard: {},
+    targetType: 'stick',
+    targets: [
+      target(1, 3, 'stick'),
+      target(2, 4, 'stick'),
+      target(3, 2, 'stick'),
+      target(4, 5, 'stick'),
+      target(5, 3, 'stick'),
+      target(6, 4, 'stick'),
+      target(3, 4, 'stick')
+    ],
+    targetCount: 7,
+    objective: { type: ObjectiveType.COLLECT_GEMS, targetAmount: 7, currentAmount: 0 },
     starThresholds: [900, 1500, 2100],
     rewardCoins: 18,
     rewardGems: 2,
     difficulty: 'Hard'
   });
 
+  // Level 10: 8 Royal Crowns (Boss Level)
   list.push({
     id: 10,
     worldId: 1,
-    title: 'Forest Warden',
+    title: 'Royal Crown',
     boardSize: 8,
     initialBoard: {
-      '2,3': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
-      '2,4': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
-      '5,3': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
-      '5,4': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
-      '3,2': obstacle(BlockColorType.GREEN, SpecialBlockType.GEM_GREEN),
-      '4,5': obstacle(BlockColorType.GREEN, SpecialBlockType.GEM_GREEN)
+      '0,0': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
+      '0,7': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
+      '7,0': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
+      '7,7': obstacle(BlockColorType.NONE, SpecialBlockType.STONE)
     },
-    objective: { type: ObjectiveType.SCORE, targetAmount: 1400, currentAmount: 0 },
-    moveLimit: 22,
+    targetType: 'crown',
+    targets: [
+      target(2, 1, 'crown'),
+      target(2, 3, 'crown'),
+      target(2, 5, 'crown'),
+      target(4, 2, 'crown'),
+      target(4, 4, 'crown'),
+      target(5, 2, 'crown'),
+      target(5, 4, 'crown'),
+      target(3, 3, 'crown')
+    ],
+    targetCount: 8,
+    objective: { type: ObjectiveType.COLLECT_GEMS, targetAmount: 8, currentAmount: 0 },
     starThresholds: [1000, 1600, 2300],
     rewardCoins: 25,
     rewardGems: 3,
@@ -202,152 +308,119 @@ function build50Levels(): LevelData[] {
 
   // ==========================================
   // WORLD 2: SOLAR DESERT (Levels 11 to 20)
+  // Multi-target levels (Red Star + Yellow Gem, matching reference screenshot!)
   // ==========================================
   const desertTitles = [
     'Dune Gate', 'Mirage Valley', 'Sun Temple', 'Oasis Well', 'Pyramid Core',
     'Sandstorm', 'Golden Scarab', 'Sunken Crypt', "Pharaoh's Vault", 'Desert Titan'
   ];
+
   for (let i = 11; i <= 20; i++) {
     const offset = i - 11;
-    const objType = offset % 3 === 0 ? ObjectiveType.CLEAR_COLOR : offset % 3 === 1 ? ObjectiveType.SCORE : ObjectiveType.COLLECT_GEMS;
-    const targetColors = [BlockColorType.YELLOW, BlockColorType.ORANGE, BlockColorType.PURPLE, BlockColorType.RED];
-    const targetColor = targetColors[offset % 4];
+    const count = 6 + offset;
+    const initialBoard: Record<string, CellState> = {};
+    if (i >= 14) {
+      initialBoard['0,0'] = obstacle(BlockColorType.NONE, SpecialBlockType.STONE);
+      initialBoard['0,7'] = obstacle(BlockColorType.NONE, SpecialBlockType.STONE);
+    }
 
-    const desertObstacles: Record<string, CellState> = {};
-    if (i >= 13) {
-      desertObstacles['1,1'] = obstacle(BlockColorType.NONE, SpecialBlockType.STONE);
-      desertObstacles['1,6'] = obstacle(BlockColorType.NONE, SpecialBlockType.STONE);
-    }
-    if (i >= 15) {
-      desertObstacles['3,3'] = obstacle(BlockColorType.NONE, SpecialBlockType.STONE);
-      desertObstacles['3,4'] = obstacle(BlockColorType.NONE, SpecialBlockType.STONE);
-      desertObstacles['4,3'] = obstacle(BlockColorType.NONE, SpecialBlockType.STONE);
-      desertObstacles['4,4'] = obstacle(BlockColorType.NONE, SpecialBlockType.STONE);
-    }
-    if (objType === ObjectiveType.COLLECT_GEMS) {
-      desertObstacles['2,2'] = obstacle(BlockColorType.RED, SpecialBlockType.GEM_RED);
-      desertObstacles['5,5'] = obstacle(BlockColorType.RED, SpecialBlockType.GEM_RED);
-      desertObstacles['2,5'] = obstacle(BlockColorType.RED, SpecialBlockType.GEM_RED);
-      desertObstacles['5,2'] = obstacle(BlockColorType.RED, SpecialBlockType.GEM_RED);
-    }
+    // Mix of Red Star and Yellow Gem (as shown in reference screenshot)
+    const types = i % 2 === 0 ? ['red_star', 'yellow_gem'] : ['pig', 'stick'];
+    const generated = generatePatternTargets(8, count, types, initialBoard, i * 19);
 
     list.push({
       id: i,
       worldId: 2,
       title: desertTitles[offset],
-      initialBoard: desertObstacles,
-      objective: {
-        type: objType,
-        targetAmount:
-          objType === ObjectiveType.CLEAR_COLOR
-            ? 14 + offset
-            : objType === ObjectiveType.SCORE
-            ? 1000 + offset * 120
-            : 4 + Math.floor(offset / 3),
-        currentAmount: 0,
-        targetColor: objType === ObjectiveType.CLEAR_COLOR ? targetColor : undefined
-      },
-      moveLimit: Math.max(16, 22 - Math.floor(offset / 3)),
-      starThresholds: [900 + offset * 100, 1500 + offset * 120, 2200 + offset * 150],
-      rewardCoins: 180 + offset * 15,
-      rewardGems: i === 20 ? 6 : 3,
+      boardSize: 8,
+      initialBoard,
+      targetType: types[0],
+      targets: generated,
+      targetCount: generated.length,
+      objective: { type: ObjectiveType.COLLECT_GEMS, targetAmount: generated.length, currentAmount: 0 },
+      starThresholds: [1000 + offset * 120, 1600 + offset * 150, 2300 + offset * 180],
+      rewardCoins: 40 + offset * 8,
+      rewardGems: i === 20 ? 5 : 2,
       difficulty: i === 20 ? 'Boss' : i >= 17 ? 'Hard' : 'Medium'
     });
   }
 
   // ==========================================
   // WORLD 3: ARCTIC GLACIER (Levels 21 to 30)
+  // Diamonds, Purple Gems, and Ice Blocks
   // ==========================================
   const arcticTitles = [
-    'Frozen Threshold', 'Icebound River', 'Glacial Ridge', 'Crystal Cavern', 'Permafrost Deep',
-    'Frostbite Pass', 'Blizzard Eye', 'Aurora Peak', 'Shattered Ice', 'Glacier Colossus'
+    'Frost Peak', 'Icefall Cave', 'Glacier Chasm', 'Crystal Spire', 'Blizzard Pass',
+    'Frozen Lake', 'Aurora Valley', 'Biting Wind', 'Winter Citadel', 'The Frostbite'
   ];
+
   for (let i = 21; i <= 30; i++) {
     const offset = i - 21;
-    const iceObstacles: Record<string, CellState> = {
-      '2,3': obstacle(BlockColorType.NONE, SpecialBlockType.ICE),
-      '2,4': obstacle(BlockColorType.NONE, SpecialBlockType.ICE),
-      '5,3': obstacle(BlockColorType.NONE, SpecialBlockType.ICE),
-      '5,4': obstacle(BlockColorType.NONE, SpecialBlockType.ICE)
+    const count = 7 + offset;
+    const initialBoard: Record<string, CellState> = {
+      '1,1': obstacle(BlockColorType.NONE, SpecialBlockType.ICE),
+      '6,6': obstacle(BlockColorType.NONE, SpecialBlockType.ICE)
     };
     if (i >= 25) {
-      iceObstacles['3,2'] = obstacle(BlockColorType.NONE, SpecialBlockType.ICE);
-      iceObstacles['4,2'] = obstacle(BlockColorType.NONE, SpecialBlockType.ICE);
-      iceObstacles['3,5'] = obstacle(BlockColorType.NONE, SpecialBlockType.ICE);
-      iceObstacles['4,5'] = obstacle(BlockColorType.NONE, SpecialBlockType.ICE);
-    }
-    if (i % 2 === 1) {
-      iceObstacles['1,1'] = obstacle(BlockColorType.BLUE, SpecialBlockType.GEM_BLUE);
-      iceObstacles['6,6'] = obstacle(BlockColorType.BLUE, SpecialBlockType.GEM_BLUE);
+      initialBoard['1,6'] = obstacle(BlockColorType.NONE, SpecialBlockType.ICE);
+      initialBoard['6,1'] = obstacle(BlockColorType.NONE, SpecialBlockType.ICE);
     }
 
-    const objType = offset % 3 === 0 ? ObjectiveType.CLEAR_SPECIAL : offset % 3 === 1 ? ObjectiveType.CLEAR_COLOR : ObjectiveType.SCORE;
+    const types = ['blue_diamond', 'purple_gem'];
+    const generated = generatePatternTargets(8, count, types, initialBoard, i * 23);
+
     list.push({
       id: i,
       worldId: 3,
       title: arcticTitles[offset],
-      initialBoard: iceObstacles,
-      objective: {
-        type: objType,
-        targetAmount:
-          objType === ObjectiveType.CLEAR_SPECIAL
-            ? 4 + Math.floor(offset / 2)
-            : objType === ObjectiveType.CLEAR_COLOR
-            ? 16 + offset
-            : 1400 + offset * 150,
-        currentAmount: 0,
-        targetColor: objType === ObjectiveType.CLEAR_COLOR ? BlockColorType.BLUE : undefined,
-        targetSpecial: objType === ObjectiveType.CLEAR_SPECIAL ? SpecialBlockType.ICE : undefined
-      },
-      moveLimit: Math.max(17, 24 - Math.floor(offset / 2)),
-      starThresholds: [1200 + offset * 120, 1800 + offset * 150, 2600 + offset * 180],
-      rewardCoins: 220 + offset * 15,
-      rewardGems: i === 30 ? 7 : 4,
+      boardSize: 8,
+      initialBoard,
+      targetType: 'blue_diamond',
+      targets: generated,
+      targetCount: generated.length,
+      objective: { type: ObjectiveType.COLLECT_GEMS, targetAmount: generated.length, currentAmount: 0 },
+      starThresholds: [1200 + offset * 140, 1800 + offset * 170, 2600 + offset * 200],
+      rewardCoins: 100 + offset * 10,
+      rewardGems: i === 30 ? 6 : 3,
       difficulty: i === 30 ? 'Boss' : i >= 27 ? 'Hard' : 'Medium'
     });
   }
 
   // ==========================================
   // WORLD 4: VOLCANIC CALDERA (Levels 31 to 40)
+  // Red Stars, Coins, and Crowns
   // ==========================================
   const volcanicTitles = [
-    'Obsidian Gate', 'Lava Tubes', 'Cinder Crater', 'Magma Chamber', 'Blast Forge',
-    'Sulfur Springs', 'Pyre Ridge', 'Ignition Core', 'Eruption Trench', 'Inferno Dragon'
+    'Magma Ridge', 'Ash Plateau', 'Obsidian Gate', 'Cinder Core', 'Lava Trench',
+    'Ember Bastion', 'Brimstone Vault', 'Firefall Cavern', 'Infernal Heart', 'Magma Sovereign'
   ];
+
   for (let i = 31; i <= 40; i++) {
     const offset = i - 31;
-    const magmaObstacles: Record<string, CellState> = {
-      '3,3': obstacle(BlockColorType.NONE, SpecialBlockType.BOMB),
-      '4,4': obstacle(BlockColorType.NONE, SpecialBlockType.BOMB)
-    };
-    if (i >= 34) {
-      magmaObstacles['2,2'] = obstacle(BlockColorType.NONE, SpecialBlockType.STONE);
-      magmaObstacles['5,5'] = obstacle(BlockColorType.NONE, SpecialBlockType.STONE);
-      magmaObstacles['2,5'] = obstacle(BlockColorType.NONE, SpecialBlockType.ROCKET_ROW);
-      magmaObstacles['5,2'] = obstacle(BlockColorType.NONE, SpecialBlockType.ROCKET_COL);
+    const count = 8 + offset;
+    const initialBoard: Record<string, CellState> = {};
+    if (i >= 33) {
+      initialBoard['0,3'] = obstacle(BlockColorType.NONE, SpecialBlockType.STONE);
+      initialBoard['0,4'] = obstacle(BlockColorType.NONE, SpecialBlockType.STONE);
+      initialBoard['7,3'] = obstacle(BlockColorType.NONE, SpecialBlockType.STONE);
+      initialBoard['7,4'] = obstacle(BlockColorType.NONE, SpecialBlockType.STONE);
     }
 
-    const objType = offset % 3 === 0 ? ObjectiveType.CLEAR_SPECIAL : offset % 3 === 1 ? ObjectiveType.CLEAR_COLOR : ObjectiveType.SCORE;
+    const types = ['red_star', 'coin'];
+    const generated = generatePatternTargets(8, count, types, initialBoard, i * 29);
+
     list.push({
       id: i,
       worldId: 4,
       title: volcanicTitles[offset],
-      initialBoard: magmaObstacles,
-      objective: {
-        type: objType,
-        targetAmount:
-          objType === ObjectiveType.CLEAR_SPECIAL
-            ? 2 + Math.floor(offset / 3)
-            : objType === ObjectiveType.CLEAR_COLOR
-            ? 18 + offset
-            : 1800 + offset * 200,
-        currentAmount: 0,
-        targetColor: objType === ObjectiveType.CLEAR_COLOR ? BlockColorType.RED : undefined,
-        targetSpecial: objType === ObjectiveType.CLEAR_SPECIAL ? SpecialBlockType.BOMB : undefined
-      },
-      moveLimit: Math.max(16, 22 - Math.floor(offset / 3)),
-      starThresholds: [1500 + offset * 150, 2200 + offset * 180, 3100 + offset * 200],
-      rewardCoins: 260 + offset * 20,
+      boardSize: 8,
+      initialBoard,
+      targetType: 'red_star',
+      targets: generated,
+      targetCount: generated.length,
+      objective: { type: ObjectiveType.COLLECT_GEMS, targetAmount: generated.length, currentAmount: 0 },
+      starThresholds: [1500 + offset * 160, 2200 + offset * 190, 3100 + offset * 220],
+      rewardCoins: 180 + offset * 15,
       rewardGems: i === 40 ? 8 : 4,
       difficulty: i === 40 ? 'Boss' : i >= 37 ? 'Expert' : 'Hard'
     });
@@ -355,46 +428,36 @@ function build50Levels(): LevelData[] {
 
   // ==========================================
   // WORLD 5: CYBER NEBULA (Levels 41 to 50)
+  // Rainbow Gems, Hearts, and Crowns
   // ==========================================
   const cyberTitles = [
     'Neon Horizon', 'Quantum Grid', 'Cyber Core', 'Data Stream', 'Matrix Breach',
     'Synapse Loop', 'Orbital Gateway', 'Starlight Zenith', 'Apex Singularity', 'The Grandmaster'
   ];
+
   for (let i = 41; i <= 50; i++) {
     const offset = i - 41;
-    const cyberObstacles: Record<string, CellState> = {
+    const count = 9 + offset;
+    const initialBoard: Record<string, CellState> = {
       '0,0': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
       '0,7': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
       '7,0': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
-      '7,7': obstacle(BlockColorType.NONE, SpecialBlockType.STONE),
-      '3,3': obstacle(BlockColorType.NONE, SpecialBlockType.RAINBOW),
-      '4,4': obstacle(BlockColorType.NONE, SpecialBlockType.RAINBOW)
+      '7,7': obstacle(BlockColorType.NONE, SpecialBlockType.STONE)
     };
-    if (i >= 45) {
-      cyberObstacles['1,6'] = obstacle(BlockColorType.NONE, SpecialBlockType.ICE);
-      cyberObstacles['6,1'] = obstacle(BlockColorType.NONE, SpecialBlockType.ICE);
-      cyberObstacles['2,2'] = obstacle(BlockColorType.BLUE, SpecialBlockType.GEM_BLUE);
-      cyberObstacles['5,5'] = obstacle(BlockColorType.RED, SpecialBlockType.GEM_RED);
-    }
 
-    const objType = offset % 3 === 0 ? ObjectiveType.CLEAR_SPECIAL : offset % 3 === 1 ? ObjectiveType.SCORE : ObjectiveType.COLLECT_GEMS;
+    const types = ['rainbow_gem', 'heart', 'crown'];
+    const generated = generatePatternTargets(8, count, types, initialBoard, i * 31);
+
     list.push({
       id: i,
       worldId: 5,
       title: cyberTitles[offset],
-      initialBoard: cyberObstacles,
-      objective: {
-        type: objType,
-        targetAmount:
-          objType === ObjectiveType.CLEAR_SPECIAL
-            ? 2 + Math.floor(offset / 3)
-            : objType === ObjectiveType.SCORE
-            ? 2200 + offset * 250
-            : 6,
-        currentAmount: 0,
-        targetSpecial: objType === ObjectiveType.CLEAR_SPECIAL ? SpecialBlockType.RAINBOW : undefined
-      },
-      moveLimit: Math.max(16, 22 - Math.floor(offset / 4)),
+      boardSize: 8,
+      initialBoard,
+      targetType: 'rainbow_gem',
+      targets: generated,
+      targetCount: generated.length,
+      objective: { type: ObjectiveType.COLLECT_GEMS, targetAmount: generated.length, currentAmount: 0 },
       starThresholds: [1800 + offset * 180, 2600 + offset * 220, 3600 + offset * 250],
       rewardCoins: 300 + offset * 25,
       rewardGems: i === 50 ? 10 : 5,

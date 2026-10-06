@@ -74,6 +74,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       : playerData.classicHighScore
   );
   const [movesLeft, setMovesLeft] = useState<number>(25);
+  const [remainingTargetsByType, setRemainingTargetsByType] = useState<Record<string, number>>({});
+  const [totalRemainingTargets, setTotalRemainingTargets] = useState<number>(0);
   const [isNewHighScore, setIsNewHighScore] = useState<boolean>(false);
   const [clearingCells, setClearingCells] = useState<[number, number][]>([]);
 
@@ -235,15 +237,24 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         setTrayPieces(newTrio);
       } else if (mode === GameMode.ADVENTURE) {
         const lvl = getLevel(lvlId);
-        setLevelData({
-          ...lvl,
-          objective: { ...lvl.objective, currentAmount: 0 }
+        setLevelData(lvl);
+        boardEngineRef.current.loadInitialBoard(lvl.initialBoard, lvl.boardSize || 8);
+        if (lvl.targets && lvl.targets.length > 0) {
+          boardEngineRef.current.loadTargets(lvl.targets);
+        }
+        const targetMap: Record<string, number> = {};
+        (lvl.targets || []).forEach((t) => {
+          targetMap[t.type] = (targetMap[t.type] || 0) + 1;
         });
-        boardEngineRef.current.loadInitialBoard(lvl.initialBoard);
-        setMovesLeft(lvl.moveLimit);
+        setRemainingTargetsByType(targetMap);
+        setTotalRemainingTargets(lvl.targets?.length || 0);
         setHighScore(playerData.levelHighScores[lvlId] || 0);
 
-        const newTrio = pieceEngineRef.current.generatePieceTrio(true, 2, checkCanFit);
+        const newTrio = pieceEngineRef.current.generateBoardAwareTrio(
+          boardEngineRef.current,
+          2,
+          false
+        );
         setTrayPieces(newTrio);
       } else {
         setLevelData(null);
@@ -307,7 +318,17 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   // Unified Piece Placement Execution Engine
   const executePlacement = useCallback(
     (piece: Piece, slotIdx: number, targetRow: number, targetCol: number) => {
-      // 1. Place piece
+      // 1. Calculate covered cells and place piece
+      const matrix = piece.shape.matrix;
+      const pieceCoveredCells: [number, number][] = [];
+      for (let r = 0; r < matrix.length; r++) {
+        for (let c = 0; c < matrix[r].length; c++) {
+          if (matrix[r][c]) {
+            pieceCoveredCells.push([targetRow + r, targetCol + c]);
+          }
+        }
+      }
+
       boardEngineRef.current.placePiece(piece, targetRow, targetCol);
       audioManager.playPiecePlacement();
       hapticManager.medium();
@@ -395,9 +416,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         }
       }
 
-      // 5. Check Moves (Adventure & Daily Challenge)
+      // 5. Check Moves (Daily Challenge Only - Adventure Mode has NO move limits)
       let nextMoves = movesLeft;
-      if (mode === GameMode.ADVENTURE || mode === GameMode.DAILY_CHALLENGE) {
+      if (mode === GameMode.DAILY_CHALLENGE) {
         nextMoves = Math.max(0, movesLeft - 1);
         setMovesLeft(nextMoves);
       }
@@ -405,30 +426,30 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       let wonMatch = false;
 
       // Check Daily Challenge Stage Objective
-      if (mode === GameMode.DAILY_CHALLENGE && levelData) {
+      if (mode === GameMode.DAILY_CHALLENGE && levelData && levelData.objective) {
         const obj = { ...levelData.objective };
         if (obj.type === ObjectiveType.SCORE) {
           obj.currentAmount = newScore;
         } else if (obj.type === ObjectiveType.CLEAR_COLOR) {
           if (piece.color === obj.targetColor) {
-            obj.currentAmount += piece.blockCount;
+            obj.currentAmount = (obj.currentAmount || 0) + piece.blockCount;
           }
         } else if (obj.type === ObjectiveType.COLLECT_GEMS) {
           const totalGems = Object.values(clearResult.gemsCollected).reduce(
             (sum, val) => sum + (val || 0),
             0
           );
-          obj.currentAmount += totalGems;
+          obj.currentAmount = (obj.currentAmount || 0) + totalGems;
         } else if (obj.type === ObjectiveType.CLEAR_SPECIAL) {
           const matched = clearResult.specialEffectsTriggered.filter(
             (e) => e.type === obj.targetSpecial
           ).length;
-          obj.currentAmount += matched;
+          obj.currentAmount = (obj.currentAmount || 0) + matched;
         }
 
         setLevelData({ ...levelData, objective: obj });
 
-        if (obj.currentAmount >= obj.targetAmount) {
+        if (obj.currentAmount !== undefined && obj.targetAmount !== undefined && obj.currentAmount >= obj.targetAmount) {
           wonMatch = true;
           setShowDailyVictory(true);
           audioManager.playLevelComplete();
@@ -450,95 +471,109 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         }
       }
 
-      // Check Adventure Objectives
+      // Check Adventure Target Collection Objective (Bubble Block style)
       if (mode === GameMode.ADVENTURE && levelData) {
-        const obj = { ...levelData.objective };
-        if (obj.type === ObjectiveType.SCORE) {
-          obj.currentAmount = newScore;
-        } else if (obj.type === ObjectiveType.CLEAR_COLOR) {
-          if (piece.color === obj.targetColor) {
-            obj.currentAmount += piece.blockCount;
+        const newlyCollected: string[] = [];
+        for (const [r, c] of pieceCoveredCells) {
+          const cell = boardEngineRef.current.getCell(r, c);
+          if (cell && cell.target && !cell.target.collected) {
+            cell.target.collected = true;
+            newlyCollected.push(cell.target.type);
           }
-        } else if (obj.type === ObjectiveType.COLLECT_GEMS) {
-          const totalGems = Object.values(clearResult.gemsCollected).reduce(
-            (sum, val) => sum + (val || 0),
-            0
-          );
-          obj.currentAmount += totalGems;
-        } else if (obj.type === ObjectiveType.CLEAR_SPECIAL) {
-          const matched = clearResult.specialEffectsTriggered.filter(
-            (e) => e.type === obj.targetSpecial
-          ).length;
-          obj.currentAmount += matched;
         }
 
-        setLevelData({ ...levelData, objective: obj });
-
-        if (obj.currentAmount >= obj.targetAmount) {
-          wonMatch = true;
-          const starsCount =
-            newScore >= levelData.starThresholds[2]
-              ? 3
-              : newScore >= levelData.starThresholds[1]
-              ? 2
-              : 1;
-          const coinReward = levelData.rewardCoins;
-          const gemReward = levelData.rewardGems;
-
-          setEarnedStars(starsCount);
-          setCoinsEarned(coinReward);
-          setGemsEarned(gemReward);
-          setIsLevelComplete(true);
-          audioManager.playLevelComplete();
+        if (newlyCollected.length > 0) {
+          audioManager.playGemCollect();
           hapticManager.celebration();
 
-          const updatedUnlocked = Array.from(
-            new Set([...playerData.unlockedLevels, levelData.id + 1])
-          );
-          const updatedStars = {
-            ...playerData.levelStars,
-            [levelData.id]: Math.max(
-              playerData.levelStars[levelData.id] || 0,
-              starsCount
-            )
-          };
-          const updatedHighScores = {
-            ...playerData.levelHighScores,
-            [levelData.id]: Math.max(
-              playerData.levelHighScores[levelData.id] || 0,
-              newScore
-            )
-          };
-          const updatedPlayer: PlayerData = {
-            ...playerData,
-            coins: playerData.coins + coinReward,
-            gems: playerData.gems + gemReward,
-            currentLevel: Math.max(playerData.currentLevel, levelData.id + 1),
-            unlockedLevels: updatedUnlocked,
-            levelStars: updatedStars,
-            levelHighScores: updatedHighScores
-          };
-          saveManager.savePlayerData(updatedPlayer);
-          onUpdatePlayerData(updatedPlayer);
+          setRemainingTargetsByType((prev) => {
+            const nextMap = { ...prev };
+            newlyCollected.forEach((type) => {
+              if (nextMap[type] !== undefined) {
+                nextMap[type] = Math.max(0, nextMap[type] - 1);
+              }
+            });
+            return nextMap;
+          });
+
+          const nextRemaining = Math.max(0, totalRemainingTargets - newlyCollected.length);
+          setTotalRemainingTargets(nextRemaining);
+
+          // Level completes ONLY when all targets are collected
+          if (nextRemaining === 0 && !isLevelComplete) {
+            wonMatch = true;
+            const starsCount =
+              newScore >= levelData.starThresholds[2]
+                ? 3
+                : newScore >= levelData.starThresholds[1]
+                ? 2
+                : 1;
+            const coinReward = levelData.rewardCoins;
+            const gemReward = levelData.rewardGems;
+
+            setEarnedStars(starsCount);
+            setCoinsEarned(coinReward);
+            setGemsEarned(gemReward);
+            setIsLevelComplete(true);
+            audioManager.playLevelComplete();
+            hapticManager.celebration();
+
+            const updatedUnlocked = Array.from(
+              new Set([...playerData.unlockedLevels, levelData.id + 1])
+            );
+            const updatedStars = {
+              ...playerData.levelStars,
+              [levelData.id]: Math.max(
+                playerData.levelStars[levelData.id] || 0,
+                starsCount
+              )
+            };
+            const updatedHighScores = {
+              ...playerData.levelHighScores,
+              [levelData.id]: Math.max(
+                playerData.levelHighScores[levelData.id] || 0,
+                newScore
+              )
+            };
+            const updatedPlayer: PlayerData = {
+              ...playerData,
+              coins: playerData.coins + coinReward,
+              gems: playerData.gems + gemReward,
+              currentLevel: Math.max(playerData.currentLevel, levelData.id + 1),
+              unlockedLevels: updatedUnlocked,
+              levelStars: updatedStars,
+              levelHighScores: updatedHighScores
+            };
+            saveManager.savePlayerData(updatedPlayer);
+            onUpdatePlayerData(updatedPlayer);
+          }
         }
       }
 
-      // 6. Refill tray if all 3 pieces used, with fairness check
+      // 6. Refill tray if all 3 pieces used (Level-Aware & Board-Aware for Adventure Mode)
       let finalTray = nextTray;
       if (nextTray.every((p) => p === null)) {
-        const diff = getCurrentDifficulty(newScore);
-        const checkCanFit = (p: Piece) => gameOverEngineRef.current.canPieceFitAnywhere(p);
-        finalTray = pieceEngineRef.current.generatePieceTrio(true, diff, checkCanFit);
+        if (mode === GameMode.ADVENTURE) {
+          finalTray = pieceEngineRef.current.generateBoardAwareTrio(
+            boardEngineRef.current,
+            getCurrentDifficulty(newScore),
+            false
+          );
+        } else {
+          const diff = getCurrentDifficulty(newScore);
+          const checkCanFit = (p: Piece) => gameOverEngineRef.current.canPieceFitAnywhere(p);
+          finalTray = pieceEngineRef.current.generatePieceTrio(true, diff, checkCanFit);
+        }
         audioManager.playSpawnNewPieces();
       }
       setTrayPieces(finalTray);
 
-      // 7. Check Game Over
+      // 7. Check Game Over (Adventure Mode NEVER fails due to moves)
       let gameOver = false;
       let isOutOfMoves = false;
 
       if (!wonMatch) {
-        if ((mode === GameMode.ADVENTURE || mode === GameMode.DAILY_CHALLENGE) && nextMoves <= 0) {
+        if (mode === GameMode.DAILY_CHALLENGE && nextMoves <= 0) {
           gameOver = true;
           isOutOfMoves = true;
         } else if (gameOverEngineRef.current.isGameOver(finalTray)) {
@@ -843,6 +878,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         stageNumber={mode === GameMode.DAILY_CHALLENGE ? dailyStageIndex + 1 : undefined}
         objective={levelData?.objective}
         movesLeft={movesLeft}
+        remainingTargetsByType={remainingTargetsByType}
+        totalRemainingTargets={totalRemainingTargets}
         isNewHighScore={isNewHighScore}
         onPauseClick={() => setIsPaused(true)}
       />

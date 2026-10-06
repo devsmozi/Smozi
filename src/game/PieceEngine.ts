@@ -2,50 +2,79 @@ import { BlockColorType, PLAYABLE_COLORS, getRandomPlayableColor } from '../mode
 import { Piece, createPiece } from '../models/Piece.ts';
 import { PieceShapeType, createPieceShape } from '../models/PieceShape.ts';
 import { SpecialBlockType } from '../models/SpecialBlockType.ts';
+import { BoardEngine } from './BoardEngine.ts';
 
 export class PieceEngine {
-  // Simple shapes: 1-dots, 2-lines, 3-lines, 2x2 squares, corners
+  // Diverse library of shapes
   private simpleShapes: PieceShapeType[] = [
-    PieceShapeType.DOT_1,
     PieceShapeType.LINE_2_H,
     PieceShapeType.LINE_2_V,
-    PieceShapeType.LINE_3_H,
-    PieceShapeType.LINE_3_V,
-    PieceShapeType.SQUARE_2X2,
     PieceShapeType.CORNER_2X2_TL,
     PieceShapeType.CORNER_2X2_TR,
     PieceShapeType.CORNER_2X2_BL,
-    PieceShapeType.CORNER_2X2_BR
+    PieceShapeType.CORNER_2X2_BR,
+    PieceShapeType.LINE_3_H,
+    PieceShapeType.LINE_3_V,
+    PieceShapeType.SQUARE_2X2
   ];
 
-  // Medium shapes: L, J, T, S, Z, 4-lines
   private mediumShapes: PieceShapeType[] = [
     PieceShapeType.L_3X2_0,
     PieceShapeType.L_3X2_90,
+    PieceShapeType.L_3X2_180,
+    PieceShapeType.L_3X2_270,
     PieceShapeType.J_3X2_0,
     PieceShapeType.J_3X2_90,
+    PieceShapeType.J_3X2_180,
+    PieceShapeType.J_3X2_270,
     PieceShapeType.T_3X2_UP,
     PieceShapeType.T_3X2_DOWN,
+    PieceShapeType.T_3X2_LEFT,
+    PieceShapeType.T_3X2_RIGHT,
     PieceShapeType.S_H,
+    PieceShapeType.S_V,
     PieceShapeType.Z_H,
+    PieceShapeType.Z_V,
     PieceShapeType.LINE_4_H,
     PieceShapeType.LINE_4_V
   ];
 
-  // Hard shapes: 5-lines, 3x3 squares, crosses, flipped L/J/T/S/Z
   private hardShapes: PieceShapeType[] = [
     PieceShapeType.LINE_5_H,
     PieceShapeType.LINE_5_V,
     PieceShapeType.SQUARE_3X3,
-    PieceShapeType.CROSS_3X3,
+    PieceShapeType.CROSS_3X3
+  ];
+
+  private allCatalogShapes: PieceShapeType[] = [
+    PieceShapeType.LINE_2_H,
+    PieceShapeType.LINE_2_V,
+    PieceShapeType.LINE_3_H,
+    PieceShapeType.LINE_3_V,
+    PieceShapeType.LINE_4_H,
+    PieceShapeType.LINE_4_V,
+    PieceShapeType.SQUARE_2X2,
+    PieceShapeType.L_3X2_0,
+    PieceShapeType.L_3X2_90,
     PieceShapeType.L_3X2_180,
     PieceShapeType.L_3X2_270,
+    PieceShapeType.J_3X2_0,
+    PieceShapeType.J_3X2_90,
     PieceShapeType.J_3X2_180,
     PieceShapeType.J_3X2_270,
+    PieceShapeType.T_3X2_UP,
+    PieceShapeType.T_3X2_DOWN,
     PieceShapeType.T_3X2_LEFT,
     PieceShapeType.T_3X2_RIGHT,
+    PieceShapeType.S_H,
     PieceShapeType.S_V,
-    PieceShapeType.Z_V
+    PieceShapeType.Z_H,
+    PieceShapeType.Z_V,
+    PieceShapeType.CORNER_2X2_TL,
+    PieceShapeType.CORNER_2X2_TR,
+    PieceShapeType.CORNER_2X2_BL,
+    PieceShapeType.CORNER_2X2_BR,
+    PieceShapeType.CROSS_3X3
   ];
 
   private getRandomFrom<T>(arr: T[]): T {
@@ -53,65 +82,202 @@ export class PieceEngine {
   }
 
   /**
-   * Generates a piece trio with progressive difficulty and fairness safeguard:
-   * Difficulty 1: Mostly simple shapes (high fit rate).
-   * Difficulty 2: Mix of simple and medium shapes.
-   * Difficulty 3: Balanced simple, medium, and hard shapes.
-   * Difficulty 4+: High ratio of medium and hard shapes.
-   *
-   * @param includeSpecials - whether special blocks like bomb/rockets can spawn
-   * @param difficultyLevel - 1 to 5
-   * @param fitnessChecker - optional callback to verify if at least one generated piece is playable
+   * LEVEL-AWARE & BOARD-AWARE Piece Generation System:
+   * Analyzes the current board layout, uncollected target coordinates,
+   * available empty spaces, and difficulty level to generate a balanced,
+   * engaging trio with high tactical utility and guaranteed playability.
    */
-  generatePieceTrio(
-    includeSpecials: boolean = true,
-    difficultyLevel: number = 1,
-    fitnessChecker?: (piece: Piece) => boolean
+  generateBoardAwareTrio(
+    boardEngine: BoardEngine,
+    difficultyLevel: number = 2,
+    includeSpecials: boolean = false
   ): Piece[] {
+    const size = boardEngine.size;
+    const grid = boardEngine.getBoard();
+
+    // 1. Locate uncollected targets
+    const uncollectedTargets: [number, number][] = [];
+    let occupiedCount = 0;
+    const totalCells = size * size;
+
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        const cell = grid[r][c];
+        if (cell.isOccupied) {
+          occupiedCount++;
+        }
+        if (cell.target && !cell.target.collected) {
+          uncollectedTargets.push([r, c]);
+        }
+      }
+    }
+
+    const fullnessRatio = occupiedCount / totalCells;
+
+    // 2. Evaluate all shapes against the actual board
+    interface ShapeEvaluation {
+      shapeType: PieceShapeType;
+      blockCount: number;
+      canFit: boolean;
+      coversTargetCount: number;
+      clearsLineCount: number;
+    }
+
+    const evaluations: ShapeEvaluation[] = [];
+
+    // Shuffle catalog to ensure fresh variety each generation
+    const candidates = [...this.allCatalogShapes].sort(() => Math.random() - 0.5);
+
+    for (const shapeType of candidates) {
+      const shape = createPieceShape(shapeType);
+      const testPiece = createPiece(shape, BlockColorType.BLUE, SpecialBlockType.NONE);
+      const maxR = size - shape.height;
+      const maxC = size - shape.width;
+
+      if (maxR < 0 || maxC < 0) continue;
+
+      let canFit = false;
+      let maxCoversTarget = 0;
+      let maxClearsLine = 0;
+
+      for (let r = 0; r <= maxR; r++) {
+        for (let c = 0; c <= maxC; c++) {
+          if (boardEngine.canPlace(testPiece, r, c)) {
+            canFit = true;
+
+            // Check if this placement covers any uncollected targets
+            let covers = 0;
+            const matrix = shape.matrix;
+            for (let pr = 0; pr < matrix.length; pr++) {
+              for (let pc = 0; pc < matrix[pr].length; pc++) {
+                if (matrix[pr][pc]) {
+                  const br = r + pr;
+                  const bc = c + pc;
+                  if (uncollectedTargets.some(([tr, tc]) => tr === br && tc === bc)) {
+                    covers++;
+                  }
+                }
+              }
+            }
+            if (covers > maxCoversTarget) {
+              maxCoversTarget = covers;
+            }
+
+            // Quick line clear estimation for row/col
+            let potentialClears = 0;
+            for (let pr = 0; pr < matrix.length; pr++) {
+              const br = r + pr;
+              let rowFill = 0;
+              for (let col = 0; col < size; col++) {
+                if (grid[br][col].isOccupied || (col >= c && col < c + matrix[pr].length && matrix[pr][col - c])) {
+                  rowFill++;
+                }
+              }
+              if (rowFill === size) potentialClears++;
+            }
+            if (potentialClears > maxClearsLine) {
+              maxClearsLine = potentialClears;
+            }
+          }
+        }
+      }
+
+      evaluations.push({
+        shapeType,
+        blockCount: shape.blockCount,
+        canFit,
+        coversTargetCount: maxCoversTarget,
+        clearsLineCount: maxClearsLine
+      });
+    }
+
+    // Filter to only shapes that actually fit on the board
+    const fittable = evaluations.filter((e) => e.canFit);
+
+    // If board is somehow so full that almost nothing fits, allow tiny shapes
+    if (fittable.length === 0) {
+      const emergencyShapes = [
+        PieceShapeType.DOT_1,
+        PieceShapeType.LINE_2_H,
+        PieceShapeType.LINE_2_V
+      ];
+      return emergencyShapes.slice(0, 3).map((sh) =>
+        createPiece(createPieceShape(sh), getRandomPlayableColor(), SpecialBlockType.NONE)
+      );
+    }
+
+    // Categorize shapes by tactical value
+    const targetReachers = fittable
+      .filter((e) => e.coversTargetCount > 0)
+      .sort((a, b) => b.coversTargetCount - a.coversTargetCount || b.blockCount - a.blockCount);
+
+    const lineClearers = fittable
+      .filter((e) => e.clearsLineCount > 0)
+      .sort((a, b) => b.clearsLineCount - a.clearsLineCount || b.blockCount - a.blockCount);
+
+    // Varied medium/tactical shapes (L, J, T, S, Z, 2x2, 1x4, corners) with blockCount >= 3
+    const substantialShapes = fittable.filter((e) => e.blockCount >= 3);
+    const compactShapes = fittable.filter((e) => e.blockCount <= 3);
+
+    const selectedShapeTypes: PieceShapeType[] = [];
+
+    // 1. First piece: Target Reacher (if active targets exist) or Substantial Shape
+    if (uncollectedTargets.length > 0 && targetReachers.length > 0) {
+      // Pick a target reacher, preferring substantial pieces (L, T, J, 2x2, lines)
+      const substantialReachers = targetReachers.filter((e) => e.blockCount >= 3);
+      const chosen = substantialReachers.length > 0
+        ? this.getRandomFrom(substantialReachers)
+        : targetReachers[0];
+      selectedShapeTypes.push(chosen.shapeType);
+    } else if (substantialShapes.length > 0) {
+      selectedShapeTypes.push(this.getRandomFrom(substantialShapes).shapeType);
+    } else {
+      selectedShapeTypes.push(fittable[0].shapeType);
+    }
+
+    // 2. Second piece: Line Clearer or Medium Spatial Shape (ensure variety)
+    const availableForSecond = fittable.filter((e) => !selectedShapeTypes.includes(e.shapeType));
+    const pool2 = availableForSecond.length > 0 ? availableForSecond : fittable;
+
+    if (lineClearers.length > 0 && Math.random() < 0.6) {
+      const chosenLineClearer = lineClearers.find((e) => !selectedShapeTypes.includes(e.shapeType)) || lineClearers[0];
+      selectedShapeTypes.push(chosenLineClearer.shapeType);
+    } else {
+      const mediumPool = pool2.filter((e) => e.blockCount >= 3);
+      const chosen = mediumPool.length > 0 ? this.getRandomFrom(mediumPool) : pool2[0];
+      selectedShapeTypes.push(chosen.shapeType);
+    }
+
+    // 3. Third piece: Board fullness balance
+    const availableForThird = fittable.filter((e) => !selectedShapeTypes.includes(e.shapeType));
+    const pool3 = availableForThird.length > 0 ? availableForThird : fittable;
+
+    if (fullnessRatio > 0.58) {
+      // Board crowded: provide compact maneuverable shape
+      const compactPool = pool3.filter((e) => e.blockCount <= 4);
+      const chosen = compactPool.length > 0 ? this.getRandomFrom(compactPool) : pool3[0];
+      selectedShapeTypes.push(chosen.shapeType);
+    } else {
+      // Board spacious: provide exciting medium or large shape
+      const excitingPool = pool3.filter((e) => e.blockCount >= 3);
+      const chosen = excitingPool.length > 0 ? this.getRandomFrom(excitingPool) : pool3[0];
+      selectedShapeTypes.push(chosen.shapeType);
+    }
+
+    // Shuffle the trio so the target-reaching piece is not always in slot 0
+    selectedShapeTypes.sort(() => Math.random() - 0.5);
+
+    // 4. Assign distinct vibrant colors and optional specials
+    const colors = [...PLAYABLE_COLORS].sort(() => Math.random() - 0.5);
     const result: Piece[] = [];
-    const shapePool: PieceShapeType[] = [];
 
-    // Always give at least 1 friendly piece so player doesn't get immediately stuck
-    if (difficultyLevel <= 2) {
-      shapePool.push(this.getRandomFrom(this.simpleShapes));
-    } else {
-      shapePool.push(Math.random() < 0.6 ? this.getRandomFrom(this.simpleShapes) : this.getRandomFrom(this.mediumShapes));
-    }
-
-    // 2nd piece based on difficulty
-    if (difficultyLevel === 1) {
-      shapePool.push(Math.random() < 0.8 ? this.getRandomFrom(this.simpleShapes) : this.getRandomFrom(this.mediumShapes));
-    } else if (difficultyLevel === 2) {
-      shapePool.push(Math.random() < 0.5 ? this.getRandomFrom(this.simpleShapes) : this.getRandomFrom(this.mediumShapes));
-    } else if (difficultyLevel === 3) {
-      const rand = Math.random();
-      if (rand < 0.3) shapePool.push(this.getRandomFrom(this.simpleShapes));
-      else if (rand < 0.8) shapePool.push(this.getRandomFrom(this.mediumShapes));
-      else shapePool.push(this.getRandomFrom(this.hardShapes));
-    } else {
-      const rand = Math.random();
-      if (rand < 0.2) shapePool.push(this.getRandomFrom(this.simpleShapes));
-      else if (rand < 0.6) shapePool.push(this.getRandomFrom(this.mediumShapes));
-      else shapePool.push(this.getRandomFrom(this.hardShapes));
-    }
-
-    // 3rd piece based on difficulty
-    if (difficultyLevel === 1) {
-      shapePool.push(Math.random() < 0.7 ? this.getRandomFrom(this.simpleShapes) : this.getRandomFrom(this.mediumShapes));
-    } else if (difficultyLevel === 2) {
-      shapePool.push(Math.random() < 0.3 ? this.getRandomFrom(this.hardShapes) : this.getRandomFrom(this.mediumShapes));
-    } else {
-      shapePool.push(Math.random() < 0.5 ? this.getRandomFrom(this.hardShapes) : this.getRandomFrom(this.mediumShapes));
-    }
-
-    // Assign distinct vibrant colors
-    const availableColors = [...PLAYABLE_COLORS].sort(() => Math.random() - 0.5);
-
-    for (const shapeType of shapePool) {
-      const color = availableColors.pop() || getRandomPlayableColor();
+    for (let i = 0; i < 3; i++) {
+      const shapeType = selectedShapeTypes[i] || PieceShapeType.LINE_2_H;
+      const color = colors[i] || getRandomPlayableColor();
       let specialType = SpecialBlockType.NONE;
 
-      const specialChance = difficultyLevel >= 3 ? 0.16 : 0.10;
+      // Special block chance based on difficulty
+      const specialChance = difficultyLevel >= 3 ? 0.12 : 0.08;
       if (includeSpecials && Math.random() < specialChance) {
         const randSpecial = Math.floor(Math.random() * 4);
         if (randSpecial === 0) specialType = SpecialBlockType.BOMB;
@@ -123,14 +289,73 @@ export class PieceEngine {
       result.push(createPiece(createPieceShape(shapeType), color, specialType));
     }
 
-    // Fairness Safeguard: If none of the 3 pieces can fit on the current board,
-    // swap the first piece with a smaller playable shape so the player isn't unfairly eliminated by RNG
+    return result;
+  }
+
+  /**
+   * Classic Mode / Fallback Generator with shape diversity
+   */
+  generatePieceTrio(
+    includeSpecials: boolean = true,
+    difficultyLevel: number = 1,
+    fitnessChecker?: (piece: Piece) => boolean
+  ): Piece[] {
+    const result: Piece[] = [];
+    const shapePool: PieceShapeType[] = [];
+
+    // Slot 1: Medium or Simple
+    if (difficultyLevel <= 2) {
+      shapePool.push(this.getRandomFrom(this.simpleShapes));
+    } else {
+      shapePool.push(Math.random() < 0.6 ? this.getRandomFrom(this.mediumShapes) : this.getRandomFrom(this.simpleShapes));
+    }
+
+    // Slot 2: Rich Medium shape (L, J, T, S, Z, 4-line)
+    if (difficultyLevel === 1) {
+      shapePool.push(Math.random() < 0.6 ? this.getRandomFrom(this.simpleShapes) : this.getRandomFrom(this.mediumShapes));
+    } else if (difficultyLevel === 2) {
+      shapePool.push(this.getRandomFrom(this.mediumShapes));
+    } else {
+      const rand = Math.random();
+      if (rand < 0.25) shapePool.push(this.getRandomFrom(this.simpleShapes));
+      else if (rand < 0.7) shapePool.push(this.getRandomFrom(this.mediumShapes));
+      else shapePool.push(this.getRandomFrom(this.hardShapes));
+    }
+
+    // Slot 3: Complementary shape
+    if (difficultyLevel === 1) {
+      shapePool.push(Math.random() < 0.5 ? this.getRandomFrom(this.mediumShapes) : this.getRandomFrom(this.simpleShapes));
+    } else if (difficultyLevel === 2) {
+      shapePool.push(Math.random() < 0.35 ? this.getRandomFrom(this.hardShapes) : this.getRandomFrom(this.mediumShapes));
+    } else {
+      shapePool.push(Math.random() < 0.45 ? this.getRandomFrom(this.hardShapes) : this.getRandomFrom(this.mediumShapes));
+    }
+
+    const availableColors = [...PLAYABLE_COLORS].sort(() => Math.random() - 0.5);
+
+    for (const shapeType of shapePool) {
+      const color = availableColors.pop() || getRandomPlayableColor();
+      let specialType = SpecialBlockType.NONE;
+
+      const specialChance = difficultyLevel >= 3 ? 0.15 : 0.08;
+      if (includeSpecials && Math.random() < specialChance) {
+        const randSpecial = Math.floor(Math.random() * 4);
+        if (randSpecial === 0) specialType = SpecialBlockType.BOMB;
+        else if (randSpecial === 1) specialType = SpecialBlockType.ROCKET_ROW;
+        else if (randSpecial === 2) specialType = SpecialBlockType.ROCKET_COL;
+        else specialType = SpecialBlockType.RAINBOW;
+      }
+
+      result.push(createPiece(createPieceShape(shapeType), color, specialType));
+    }
+
+    // Fairness Safeguard: Ensure at least one piece can fit
     if (fitnessChecker && !result.some((p) => fitnessChecker(p))) {
       const fallbackShapes = [
-        PieceShapeType.DOT_1,
+        PieceShapeType.CORNER_2X2_TL,
         PieceShapeType.LINE_2_H,
         PieceShapeType.LINE_2_V,
-        PieceShapeType.CORNER_2X2_TL,
+        PieceShapeType.L_3X2_0,
         PieceShapeType.LINE_3_H
       ];
       for (const shape of fallbackShapes) {
