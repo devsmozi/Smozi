@@ -1,0 +1,53 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Web Dependencies & Build
+        run: |
+          npm ci || npm install
+          npm run build
+
+      - name: Set up Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Bubblewrap CLI
+        run: npm install -g @bubblewrap/cli
+
+      - name: Build Android APK via Bubblewrap
+        run: |
+          # Generate signing key if needed
+          keytool -genkeypair -v -keystore smozi-release.keystore -alias smozi -keyalg RSA -keysize 2048 -validity 10000 -storepass smozi123 -keypass smozi123 -dname "CN=SMOZI, OU=Gaming, O=DevSmozi, L=City, S=State, C=US"
+          
+          # Initialize and build Android project
+          npx @bubblewrap/cli init --manifest=https://ais-pre-7emmorq3ntze6iahl6hmre-560848447576.asia-southeast1.run.app/manifest.webmanifest --skip-pwa-validation
+          npx @bubblewrap/cli build --keyPath=smozi-release.keystore --keyAlias=smozi --keyPassword=smozi123 --storePassword=smozi123
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SMOZI-Android-APK
+          path: |
+            *.apk
+            *.aab
