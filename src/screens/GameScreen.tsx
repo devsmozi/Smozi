@@ -25,10 +25,11 @@ import { GameOverDialog } from '../components/GameOverDialog.tsx';
 import { SettingsDialog } from '../components/SettingsDialog.tsx';
 import { ClassicMilestoneDialog } from '../components/ClassicMilestoneDialog.tsx';
 import { DailyChallengeVictoryDialog } from '../components/DailyChallengeVictoryDialog.tsx';
-import { BoosterBar, ActiveBoosterMode } from '../components/BoosterBar.tsx';
 import { HintEngine, HintMove } from '../game/HintEngine.ts';
 import { BombExplosionEffect } from '../components/SmoziBoardView.tsx';
 import { CoinFlyAnimation, CoinFlightEvent } from '../components/CoinFlyAnimation.tsx';
+import { TargetCollectAnimation, TargetCollectionEvent } from '../components/TargetCollectAnimation.tsx';
+import { Lightbulb } from 'lucide-react';
 
 interface GameScreenProps {
   mode: GameMode;
@@ -124,9 +125,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   // Dual-Input: Tap-to-Select & Tap-to-Place State
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
 
-  // Play Store Power-Ups & Booster State
-  const [activeBooster, setActiveBooster] = useState<ActiveBoosterMode>('NONE');
+  // Hint & Animation State
   const [hintMove, setHintMove] = useState<HintMove | null>(null);
+  const [collectionEvents, setCollectionEvents] = useState<TargetCollectionEvent[]>([]);
 
   // Theme
   const currentSkin = getSkinTheme(playerData.selectedTheme);
@@ -473,12 +474,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
       // Check Adventure Target Collection Objective (Bubble Block style)
       if (mode === GameMode.ADVENTURE && levelData) {
-        const newlyCollected: string[] = [];
+        const newlyCollected: { type: string; r: number; c: number }[] = [];
         for (const [r, c] of pieceCoveredCells) {
           const cell = boardEngineRef.current.getCell(r, c);
           if (cell && cell.target && !cell.target.collected) {
             cell.target.collected = true;
-            newlyCollected.push(cell.target.type);
+            newlyCollected.push({ type: cell.target.type, r, c });
           }
         }
 
@@ -486,11 +487,24 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           audioManager.playGemCollect();
           hapticManager.celebration();
 
+          // Spawn flying target collection animation
+          if (boardRef.current) {
+            const rect = boardRef.current.getBoundingClientRect();
+            const cellW = rect.width / boardEngineRef.current.size;
+            const newEvents: TargetCollectionEvent[] = newlyCollected.map((item, idx) => ({
+              id: Date.now() + idx,
+              startX: rect.left + (item.c + 0.5) * cellW,
+              startY: rect.top + (item.r + 0.5) * cellW,
+              targetType: item.type
+            }));
+            setCollectionEvents((prev) => [...prev, ...newEvents]);
+          }
+
           setRemainingTargetsByType((prev) => {
             const nextMap = { ...prev };
-            newlyCollected.forEach((type) => {
-              if (nextMap[type] !== undefined) {
-                nextMap[type] = Math.max(0, nextMap[type] - 1);
+            newlyCollected.forEach((item) => {
+              if (nextMap[item.type] !== undefined) {
+                nextMap[item.type] = Math.max(0, nextMap[item.type] - 1);
               }
             });
             return nextMap;
@@ -691,41 +705,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     }
   };
 
-  // Dual-Input & Booster Board Cell Click Handler
+  // Dual-Input: Tap-to-Place Board Cell Click Handler
   const handleBoardCellClick = (row: number, col: number) => {
-    // 1. Hammer Booster execution
-    if (activeBooster === 'HAMMER') {
-      if (playerData.coins < 50) return;
-      const updated = { ...playerData, coins: playerData.coins - 50 };
-      saveManager.savePlayerData(updated);
-      onUpdatePlayerData(updated);
-
-      boardEngineRef.current.clearSingleCell(row, col);
-      setBoard(boardEngineRef.current.getBoard());
-      audioManager.playHammerSmash();
-      hapticManager.strong();
-      setActiveBooster('NONE');
-      return;
-    }
-
-    // 2. Bomb Booster execution (3x3 explosion)
-    if (activeBooster === 'BOMB') {
-      if (playerData.coins < 80) return;
-      const updated = { ...playerData, coins: playerData.coins - 80 };
-      saveManager.savePlayerData(updated);
-      onUpdatePlayerData(updated);
-
-      const cleared = boardEngineRef.current.clearArea(row, col, 1);
-      setClearingCells(cleared);
-      setTimeout(() => setClearingCells([]), 350);
-      setBoard(boardEngineRef.current.getBoard());
-      audioManager.playBombBlast();
-      hapticManager.explosion();
-      setActiveBooster('NONE');
-      return;
-    }
-
-    // 3. Normal piece tap-to-place
     if (selectedSlotIndex === null) return;
     const piece = trayPieces[selectedSlotIndex];
     if (!piece) return;
@@ -741,39 +722,66 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     }
   };
 
-  // Shuffle Booster execution (reroll tray pieces)
-  const handleTriggerShuffle = () => {
-    if (playerData.coins < 35) return;
-    const updated = { ...playerData, coins: playerData.coins - 35 };
-    saveManager.savePlayerData(updated);
-    onUpdatePlayerData(updated);
-
-    audioManager.playShuffleSwoosh();
-    hapticManager.medium();
-    const diff = getCurrentDifficulty(score);
-    const checkCanFit = (p: Piece) => gameOverEngineRef.current.canPieceFitAnywhere(p);
-    const newTrio = pieceEngineRef.current.generatePieceTrio(true, diff, checkCanFit);
-    setTrayPieces(newTrio);
-    setSelectedSlotIndex(null);
-    setHintMove(null);
-  };
-
-  // Hint Booster execution (highlight optimal placement)
+  // Hint execution (highlight optimal placement on board)
   const handleTriggerHint = () => {
-    if (playerData.coins < 15) return;
     if (hintMove) {
       setHintMove(null);
       return;
     }
     const best = HintEngine.findBestMove(boardEngineRef.current, trayPieces);
     if (best) {
-      const updated = { ...playerData, coins: playerData.coins - 15 };
-      saveManager.savePlayerData(updated);
-      onUpdatePlayerData(updated);
+      if (playerData.coins >= 15) {
+        const updated = { ...playerData, coins: playerData.coins - 15 };
+        saveManager.savePlayerData(updated);
+        onUpdatePlayerData(updated);
+      }
       setHintMove(best);
       audioManager.playGemCollect();
       hapticManager.light();
     }
+  };
+
+  // Revive Player from Game Over (Clears congestion while preserving obstacles, spawns diverse pieces)
+  const handleRevive = () => {
+    setIsGameOver(false);
+    audioManager.playGemCollect();
+    hapticManager.celebration();
+
+    const size = boardEngineRef.current.size;
+    // Clear center blocks and alternating cells, keeping uncollected targets intact!
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        const cell = boardEngineRef.current.getCell(r, c);
+        if (cell && cell.isOccupied && (!cell.target || cell.target.collected)) {
+          const isCenter = r >= 2 && r <= 5 && c >= 2 && c <= 5;
+          if (isCenter || (r + c) % 2 === 0) {
+            boardEngineRef.current.clearCell(r, c);
+          }
+        }
+      }
+    }
+
+    setBoard(boardEngineRef.current.getBoard());
+
+    // Generate guaranteed fittable pieces with varied sizes
+    const diff = getCurrentDifficulty(score);
+    const checkCanFit = (p: Piece) => gameOverEngineRef.current.canPieceFitAnywhere(p);
+    let newPieces: Piece[];
+    if (mode === GameMode.ADVENTURE) {
+      newPieces = pieceEngineRef.current.generateBoardAwareTrio(
+        boardEngineRef.current,
+        diff,
+        false
+      );
+    } else {
+      newPieces = pieceEngineRef.current.generatePieceTrio(true, diff, checkCanFit);
+    }
+
+    setTrayPieces(newPieces);
+    setSelectedSlotIndex(null);
+    setHintMove(null);
+    setFeedbackText('REVIVED! ✨');
+    setTriggerEffect(Date.now());
   };
 
   const handleBoardCellHover = (row: number, col: number) => {
@@ -902,19 +910,34 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         />
       </div>
 
-      {/* Play Store Power-Ups & Boosters - placed in the space directly under the board */}
-      <div className="w-full px-2 py-1 shrink-0">
-        <BoosterBar
-          coins={playerData.coins}
-          activeBooster={activeBooster}
-          onSelectBooster={setActiveBooster}
-          onTriggerShuffle={handleTriggerShuffle}
-          onTriggerHint={handleTriggerHint}
-          isHintActive={!!hintMove}
-        />
+      {/* Comfortable Controls: Coin Balance & Ergonomic Hint Button */}
+      <div className="w-full max-w-[420px] mx-auto px-2 py-1 flex items-center justify-between shrink-0">
+        <div className="flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-black/40 border border-amber-400/25 shadow-sm">
+          <span className="text-sm">🪙</span>
+          <span className="text-xs font-black text-amber-300 tracking-wide">
+            {playerData.coins.toLocaleString()}
+          </span>
+        </div>
+
+        {/* Dedicated Ergonomic Hint Button */}
+        <button
+          onClick={handleTriggerHint}
+          className={`flex items-center space-x-2 px-4 py-1.5 rounded-2xl border-2 transition-all cursor-pointer shadow-md select-none active:scale-95 ${
+            hintMove
+              ? 'bg-amber-400/35 border-amber-400 text-amber-300 ring-2 ring-amber-400/60 scale-105 animate-pulse'
+              : 'bg-white/10 hover:bg-white/15 border-white/20 text-white'
+          }`}
+          title="Highlight best placement on the board"
+        >
+          <Lightbulb className={`w-4 h-4 ${hintMove ? 'text-yellow-300' : 'text-amber-400'}`} />
+          <span className="text-xs font-black tracking-wide">HINT</span>
+          <span className="text-[10px] font-bold text-amber-300 bg-black/40 px-1.5 py-0.5 rounded-md">
+            {playerData.coins >= 15 ? '15🪙' : 'FREE'}
+          </span>
+        </button>
       </div>
 
-      {/* 3. Responsive Piece Tray - placed under board & boosters for ergonomic reach */}
+      {/* 3. Responsive Piece Tray - placed under board & controls for ergonomic reach */}
       <div className="w-full px-1 py-1 shrink-0">
         <SmoziTrayView
           pieces={trayPieces}
@@ -953,6 +976,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           />
         </div>
       )}
+
+      {/* Target Collection Floating Gem Animation */}
+      <TargetCollectAnimation
+        events={collectionEvents}
+        onComplete={(id) => setCollectionEvents((prev) => prev.filter((e) => e.id !== id))}
+      />
 
       {/* Feedback Particle & Combo Overlay */}
       <ParticleOverlay
@@ -1067,7 +1096,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         />
       )}
 
-      {/* Distinct Game Over Dialog for Classic, Daily Challenge, and Adventure */}
+      {/* Distinct Game Over Dialog with Revive Option for Lost Games */}
       {isGameOver && (
         <GameOverDialog
           gameMode={mode}
@@ -1076,6 +1105,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           levelTierLabel={mode === GameMode.CLASSIC ? getClassicTierInfo(score).name : undefined}
           stageNumber={mode === GameMode.DAILY_CHALLENGE ? dailyStageIndex + 1 : undefined}
           outOfMoves={outOfMoves}
+          onRevive={handleRevive}
           onRetry={() => {
             setIsGameOver(false);
             initGame(currentLevelId, dailyStageIndex);

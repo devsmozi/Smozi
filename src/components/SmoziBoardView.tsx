@@ -61,7 +61,7 @@ export const SmoziBoardView: React.FC<SmoziBoardViewProps> = ({
   return (
     <div
       ref={boardRef}
-      className={`relative w-full max-w-[min(92vw,min(420px,calc(100dvh-265px)))] aspect-square mx-auto p-1.5 sm:p-2 rounded-2xl shadow-2xl transition-all duration-300 box-border select-none touch-none ${
+      className={`relative w-full max-w-[min(92vw,min(400px,calc(100dvh-220px)))] aspect-square mx-auto p-1.5 sm:p-2 rounded-2xl shadow-2xl transition-all duration-300 box-border select-none touch-none ${
         isCrowded ? 'ring-2 ring-red-500/70 animate-pulse' : ''
       } ${bombExplosion ? 'animate-shake-strong' : ''} ${className}`}
       style={{

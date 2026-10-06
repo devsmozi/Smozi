@@ -10,6 +10,7 @@ interface GameOverDialogProps {
   levelTierLabel?: string;
   stageNumber?: number;
   outOfMoves?: boolean;
+  onRevive?: () => void;
   onRetry: () => void;
   onHome: () => void;
 }
@@ -21,6 +22,7 @@ export const GameOverDialog: React.FC<GameOverDialogProps> = ({
   levelTierLabel,
   stageNumber,
   outOfMoves = false,
+  onRevive,
   onRetry,
   onHome
 }) => {
@@ -35,7 +37,7 @@ export const GameOverDialog: React.FC<GameOverDialogProps> = ({
 
   const failureReason = outOfMoves
     ? 'Move limit reached! Reach the objective sooner.'
-    : 'No moves left! No available pieces fit on the board.';
+    : 'Board is full! No pieces fit on the board.';
 
   const coinsEarned = isClassic ? Math.max(10, Math.floor(score / 15)) : 0;
   const isNewRecord = bestScore > 0 && score >= bestScore;
@@ -108,12 +110,23 @@ export const GameOverDialog: React.FC<GameOverDialogProps> = ({
           )}
         </div>
 
+        {/* Revive Button: Clears board blockage so player can continue without losing run */}
+        {onRevive && (
+          <SmoziButton
+            text="✨ REVIVE & KEEP PLAYING"
+            style="YELLOW_ORANGE"
+            onClick={onRevive}
+            className="w-full py-3.5 mb-2.5 text-base shadow-[0_8px_20px_rgba(255,204,0,0.5)] animate-pulse"
+            testTag="game_over_revive_button"
+          />
+        )}
+
         {/* Primary Action Button: 3D Glossy Replay Button */}
         <SmoziButton
           text={isDaily ? '▶  RETRY STAGE' : '▶  PLAY AGAIN'}
-          style="GREEN"
+          style={onRevive ? 'BLUE' : 'GREEN'}
           onClick={onRetry}
-          className="w-full py-3.5 text-base shadow-[0_8px_20px_rgba(52,199,89,0.4)]"
+          className="w-full py-3 text-base shadow-[0_8px_20px_rgba(52,199,89,0.4)]"
           testTag="game_over_retry_button"
         />
 

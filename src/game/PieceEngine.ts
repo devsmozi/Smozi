@@ -74,7 +74,11 @@ export class PieceEngine {
     PieceShapeType.CORNER_2X2_TR,
     PieceShapeType.CORNER_2X2_BL,
     PieceShapeType.CORNER_2X2_BR,
-    PieceShapeType.CROSS_3X3
+    PieceShapeType.CROSS_3X3,
+    PieceShapeType.LINE_5_H,
+    PieceShapeType.LINE_5_V,
+    PieceShapeType.SQUARE_3X3,
+    PieceShapeType.DOT_1
   ];
 
   private getRandomFrom<T>(arr: T[]): T {
@@ -215,56 +219,65 @@ export class PieceEngine {
       .filter((e) => e.clearsLineCount > 0)
       .sort((a, b) => b.clearsLineCount - a.clearsLineCount || b.blockCount - a.blockCount);
 
-    // Varied medium/tactical shapes (L, J, T, S, Z, 2x2, 1x4, corners) with blockCount >= 3
-    const substantialShapes = fittable.filter((e) => e.blockCount >= 3);
-    const compactShapes = fittable.filter((e) => e.blockCount <= 3);
+    // Distinct size categories to guarantee varied block sizes for the player:
+    // Small (1-2 cells): Dot, 2-lines
+    const smallFittable = fittable.filter((e) => e.blockCount <= 2);
+    // Medium (3 cells): 3-lines, 2x2 corners
+    const mediumFittable = fittable.filter((e) => e.blockCount === 3);
+    // Large (4 cells): 2x2 Square, L, J, T, S, Z, 4-lines
+    const largeFittable = fittable.filter((e) => e.blockCount === 4);
+    // Extra Large (5+ cells): 5-lines, 3x3 Square, Cross
+    const xlFittable = fittable.filter((e) => e.blockCount >= 5);
 
     const selectedShapeTypes: PieceShapeType[] = [];
 
-    // 1. First piece: Target Reacher (if active targets exist) or Substantial Shape
+    // 1. First piece: Target reacher if targets exist; otherwise a diverse small/precision piece
     if (uncollectedTargets.length > 0 && targetReachers.length > 0) {
-      // Pick a target reacher, preferring substantial pieces (L, T, J, 2x2, lines)
-      const substantialReachers = targetReachers.filter((e) => e.blockCount >= 3);
-      const chosen = substantialReachers.length > 0
-        ? this.getRandomFrom(substantialReachers)
-        : targetReachers[0];
+      // Pick a target reacher (can be any size that hits target)
+      const chosen = this.getRandomFrom(targetReachers);
       selectedShapeTypes.push(chosen.shapeType);
-    } else if (substantialShapes.length > 0) {
-      selectedShapeTypes.push(this.getRandomFrom(substantialShapes).shapeType);
+    } else if (smallFittable.length > 0 && Math.random() < 0.75) {
+      selectedShapeTypes.push(this.getRandomFrom(smallFittable).shapeType);
+    } else if (mediumFittable.length > 0) {
+      selectedShapeTypes.push(this.getRandomFrom(mediumFittable).shapeType);
     } else {
       selectedShapeTypes.push(fittable[0].shapeType);
     }
 
-    // 2. Second piece: Line Clearer or Medium Spatial Shape (ensure variety)
+    // 2. Second piece: Medium size block (3-4 cells) distinct from first piece
     const availableForSecond = fittable.filter((e) => !selectedShapeTypes.includes(e.shapeType));
     const pool2 = availableForSecond.length > 0 ? availableForSecond : fittable;
-
-    if (lineClearers.length > 0 && Math.random() < 0.6) {
-      const chosenLineClearer = lineClearers.find((e) => !selectedShapeTypes.includes(e.shapeType)) || lineClearers[0];
-      selectedShapeTypes.push(chosenLineClearer.shapeType);
+    const medPool = pool2.filter((e) => e.blockCount >= 3 && e.blockCount <= 4);
+    if (medPool.length > 0) {
+      selectedShapeTypes.push(this.getRandomFrom(medPool).shapeType);
     } else {
-      const mediumPool = pool2.filter((e) => e.blockCount >= 3);
-      const chosen = mediumPool.length > 0 ? this.getRandomFrom(mediumPool) : pool2[0];
-      selectedShapeTypes.push(chosen.shapeType);
+      selectedShapeTypes.push(pool2[0].shapeType);
     }
 
-    // 3. Third piece: Board fullness balance
+    // 3. Third piece: Complementary size (small precision piece if not picked, or large/xl shape)
     const availableForThird = fittable.filter((e) => !selectedShapeTypes.includes(e.shapeType));
     const pool3 = availableForThird.length > 0 ? availableForThird : fittable;
 
-    if (fullnessRatio > 0.58) {
-      // Board crowded: provide compact maneuverable shape
-      const compactPool = pool3.filter((e) => e.blockCount <= 4);
-      const chosen = compactPool.length > 0 ? this.getRandomFrom(compactPool) : pool3[0];
-      selectedShapeTypes.push(chosen.shapeType);
+    const hasSmall = selectedShapeTypes.some((st) => {
+      const sh = fittable.find((f) => f.shapeType === st);
+      return sh && sh.blockCount <= 2;
+    });
+
+    if (!hasSmall && smallFittable.length > 0) {
+      // Ensure we have a small piece in the trio
+      const smallPick = smallFittable.find((e) => !selectedShapeTypes.includes(e.shapeType)) || smallFittable[0];
+      selectedShapeTypes.push(smallPick.shapeType);
     } else {
-      // Board spacious: provide exciting medium or large shape
-      const excitingPool = pool3.filter((e) => e.blockCount >= 3);
-      const chosen = excitingPool.length > 0 ? this.getRandomFrom(excitingPool) : pool3[0];
-      selectedShapeTypes.push(chosen.shapeType);
+      // Provide larger / exciting shape (4-5 cells)
+      const bigPool = pool3.filter((e) => e.blockCount >= 4);
+      if (bigPool.length > 0 && fullnessRatio < 0.65) {
+        selectedShapeTypes.push(this.getRandomFrom(bigPool).shapeType);
+      } else {
+        selectedShapeTypes.push(this.getRandomFrom(pool3).shapeType);
+      }
     }
 
-    // Shuffle the trio so the target-reaching piece is not always in slot 0
+    // Shuffle the trio so small/medium/large pieces appear across different slots
     selectedShapeTypes.sort(() => Math.random() - 0.5);
 
     // 4. Assign distinct vibrant colors and optional specials

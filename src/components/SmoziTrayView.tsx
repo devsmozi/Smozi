@@ -88,9 +88,16 @@ export const SmoziTrayView: React.FC<SmoziTrayViewProps> = ({
                   </div>
                 )}
 
-                <div className="animate-pop-in pointer-events-none transition-transform duration-200">
-                  <SmoziPieceView piece={piece} blockSize={22} />
-                </div>
+                {(() => {
+                  const maxDim = Math.max(piece.shape.width, piece.shape.height);
+                  const dynamicSize =
+                    maxDim === 1 ? 36 : maxDim === 2 ? 30 : maxDim === 3 ? 24 : maxDim === 4 ? 20 : 16;
+                  return (
+                    <div className="animate-pop-in pointer-events-none transition-transform duration-200 flex items-center justify-center">
+                      <SmoziPieceView piece={piece} blockSize={dynamicSize} />
+                    </div>
+                  );
+                })()}
 
                 {/* Keyboard Shortcut Hint for Desktop */}
                 <div className="hidden sm:block absolute bottom-1 right-2 text-[8px] font-bold text-white/30 pointer-events-none">
