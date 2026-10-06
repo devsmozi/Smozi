@@ -38,6 +38,35 @@ export const App: React.FC = () => {
     hapticManagerRef.current.isEnabled = playerData.vibrationEnabled;
   }, [playerData.soundEnabled, playerData.musicEnabled, playerData.vibrationEnabled]);
 
+  // Android Hardware / Gesture Back Button handling
+  useEffect(() => {
+    window.history.pushState({ app: 'smozi' }, '');
+
+    const handlePopState = () => {
+      window.history.pushState({ app: 'smozi' }, '');
+
+      if (showSettings) {
+        setShowSettings(false);
+        return;
+      }
+      if (showDailyReward) {
+        setShowDailyReward(false);
+        return;
+      }
+      if (showAchievements) {
+        setShowAchievements(false);
+        return;
+      }
+      if (currentScreen === 'ADVENTURE_MAP' || currentScreen === 'GAME') {
+        setCurrentScreen('MENU');
+        return;
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [showSettings, showDailyReward, showAchievements, currentScreen]);
+
   const handleUpdatePlayerData = (updated: PlayerData) => {
     setPlayerData(updated);
     saveManagerRef.current.savePlayerData(updated);
@@ -132,6 +161,7 @@ export const App: React.FC = () => {
           onSelectTheme={(themeId) =>
             handleUpdatePlayerData({ ...playerData, selectedTheme: themeId })
           }
+          onUpdatePlayerData={handleUpdatePlayerData}
           onDismiss={() => setShowSettings(false)}
         />
       )}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Shuffle, Bomb, Lightbulb, X } from 'lucide-react';
 
-export type ActiveBoosterMode = 'NONE' | 'BOMB';
+export type ActiveBoosterMode = 'NONE' | 'BOMB' | 'HAMMER';
 
 interface BoosterBarProps {
   coins: number;
@@ -34,13 +34,15 @@ export const BoosterBar: React.FC<BoosterBarProps> = ({
     <div
       className={`w-full max-w-[420px] mx-auto flex items-center justify-between px-3 py-1.5 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-xs select-none shadow-md ${className}`}
     >
-      {/* Active Booster Prompt (Bomb Active) */}
+      {/* Active Booster Prompt (Bomb / Hammer Active) */}
       {activeBooster !== 'NONE' ? (
         <div className="w-full flex items-center justify-between px-2 animate-fade-in">
           <div className="flex items-center space-x-2">
-            <span className="text-base animate-bounce">💣</span>
+            <span className="text-base animate-bounce">{activeBooster === 'BOMB' ? '💣' : '🔨'}</span>
             <span className="text-xs font-black text-amber-300">
-              Tap anywhere to detonate 3x3 blast!
+              {activeBooster === 'BOMB'
+                ? 'Tap anywhere to detonate 3x3 blast!'
+                : 'Tap any cell to break block!'}
             </span>
           </div>
           <button

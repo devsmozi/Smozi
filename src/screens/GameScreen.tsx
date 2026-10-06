@@ -124,6 +124,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
   // Play Store Power-Ups & Booster State
   const [activeBooster, setActiveBooster] = useState<ActiveBoosterMode>('NONE');
+  const [hintMove, setHintMove] = useState<HintMove | null>(null);
 
   // Theme
   const currentSkin = getSkinTheme(playerData.selectedTheme);
@@ -203,6 +204,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       boardEngineRef.current.resetBoard();
       comboEngineRef.current.reset();
       setClearingCells([]);
+      setHintMove(null);
       setIsGameOver(false);
       setOutOfMoves(false);
       setIsLevelComplete(false);
@@ -262,6 +264,34 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     initGame(initialLevelId, dailyStageIndex);
   }, [mode, initialLevelId, dailyStageIndex, initGame]);
 
+  // Screen Wake Lock API to prevent phone display sleeping during active puzzle rounds
+  useEffect(() => {
+    let wakeLockSentinel: any = null;
+    const requestWakeLock = async () => {
+      try {
+        if ('wakeLock' in navigator && !isGameOver && !isPaused) {
+          wakeLockSentinel = await (navigator as any).wakeLock.request('screen');
+        }
+      } catch {}
+    };
+
+    requestWakeLock();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        requestWakeLock();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (wakeLockSentinel) {
+        wakeLockSentinel.release().catch(() => {});
+      }
+    };
+  }, [isGameOver, isPaused]);
+
   // Compute piece playability status in the tray
   const piecePlayableStatus = trayPieces.map((p) =>
     p !== null ? gameOverEngineRef.current.canPieceFitAnywhere(p) : false
@@ -286,6 +316,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       const nextTray = [...trayPieces];
       nextTray[slotIdx] = null;
       setSelectedSlotIndex(null);
+      setHintMove(null);
 
       // 3. Clear lines
       const clearResult = lineClearEngineRef.current.checkAndClearLines();
@@ -689,6 +720,25 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     const newTrio = pieceEngineRef.current.generatePieceTrio(true, diff, checkCanFit);
     setTrayPieces(newTrio);
     setSelectedSlotIndex(null);
+    setHintMove(null);
+  };
+
+  // Hint Booster execution (highlight optimal placement)
+  const handleTriggerHint = () => {
+    if (playerData.coins < 15) return;
+    if (hintMove) {
+      setHintMove(null);
+      return;
+    }
+    const best = HintEngine.findBestMove(boardEngineRef.current, trayPieces);
+    if (best) {
+      const updated = { ...playerData, coins: playerData.coins - 15 };
+      saveManager.savePlayerData(updated);
+      onUpdatePlayerData(updated);
+      setHintMove(best);
+      audioManager.playGemCollect();
+      hapticManager.light();
+    }
   };
 
   const handleBoardCellHover = (row: number, col: number) => {
@@ -809,6 +859,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           skinTheme={currentSkin}
           boardRef={boardRef}
           isCrowded={isBoardCrowded}
+          hintCells={hintMove?.occupiedCells || []}
           onCellClick={handleBoardCellClick}
           onCellHover={handleBoardCellHover}
         />
@@ -821,6 +872,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           activeBooster={activeBooster}
           onSelectBooster={setActiveBooster}
           onTriggerShuffle={handleTriggerShuffle}
+          onTriggerHint={handleTriggerHint}
+          isHintActive={!!hintMove}
         />
       </div>
 

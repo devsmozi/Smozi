@@ -6,6 +6,7 @@ interface SmoziBlockViewProps {
   color: BlockColorType;
   specialType?: SpecialBlockType;
   durability?: number;
+  isOccupied?: boolean;
   isClearing?: boolean;
   isPreview?: boolean;
   isDenied?: boolean;
@@ -18,6 +19,7 @@ interface SmoziBlockViewProps {
 export const SmoziBlockView: React.FC<SmoziBlockViewProps> = ({
   color,
   specialType = SpecialBlockType.NONE,
+  isOccupied,
   isClearing = false,
   isPreview = false,
   isDenied = false,
@@ -26,7 +28,9 @@ export const SmoziBlockView: React.FC<SmoziBlockViewProps> = ({
   className = '',
   size = '100%'
 }) => {
-  const isNone = color === BlockColorType.NONE && specialType === SpecialBlockType.NONE;
+  const isNone =
+    (isOccupied !== undefined && !isOccupied && specialType === SpecialBlockType.NONE) ||
+    (color === BlockColorType.NONE && specialType === SpecialBlockType.NONE);
 
   if (isNone) {
     return (

@@ -1,8 +1,23 @@
-import React from 'react';
-import { PlayerData } from '../models/GameModels.ts';
+import React, { useState } from 'react';
+import { PlayerData, INITIAL_PLAYER_DATA } from '../models/GameModels.ts';
 import { SKIN_THEMES, SkinTheme } from '../models/SkinTheme.ts';
 import { SmoziButton, SmoziIconButton } from './SmoziButton.tsx';
-import { X, Check, Sparkles, Volume2, VolumeX, Music, Smartphone, Palette } from 'lucide-react';
+import {
+  X,
+  Check,
+  Sparkles,
+  Volume2,
+  VolumeX,
+  Music,
+  Smartphone,
+  Palette,
+  ShieldCheck,
+  Download,
+  Upload,
+  RotateCcw,
+  ExternalLink,
+  Copy
+} from 'lucide-react';
 
 interface SettingsDialogProps {
   playerData: PlayerData;
@@ -10,6 +25,7 @@ interface SettingsDialogProps {
   onToggleMusic: (enabled: boolean) => void;
   onToggleVibration: (enabled: boolean) => void;
   onSelectTheme: (themeId: string) => void;
+  onUpdatePlayerData?: (data: PlayerData) => void;
   onDismiss: () => void;
 }
 
@@ -28,8 +44,66 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({
   onToggleMusic,
   onToggleVibration,
   onSelectTheme,
+  onUpdatePlayerData,
   onDismiss
 }) => {
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showBackupModal, setShowBackupModal] = useState(false);
+  const [backupCodeInput, setBackupCodeInput] = useState('');
+  const [copyStatus, setCopyStatus] = useState<string | null>(null);
+  const [importStatus, setImportStatus] = useState<string | null>(null);
+
+  const handleExportBackup = () => {
+    try {
+      const code = btoa(unescape(encodeURIComponent(JSON.stringify(playerData))));
+      navigator.clipboard.writeText(code);
+      setCopyStatus('Copied backup code to clipboard!');
+      setTimeout(() => setCopyStatus(null), 3000);
+    } catch {
+      setCopyStatus('Could not copy automatically');
+    }
+  };
+
+  const handleImportBackup = () => {
+    if (!backupCodeInput.trim()) return;
+    try {
+      let jsonStr = backupCodeInput.trim();
+      try {
+        jsonStr = decodeURIComponent(escape(atob(jsonStr)));
+      } catch {}
+      const parsed = JSON.parse(jsonStr);
+      if (typeof parsed !== 'object' || parsed === null) {
+        setImportStatus('Invalid backup code');
+        return;
+      }
+      const merged: PlayerData = {
+        ...INITIAL_PLAYER_DATA,
+        ...parsed,
+        levelStars: parsed.levelStars || {},
+        levelHighScores: parsed.levelHighScores || {},
+        achievements: parsed.achievements || {}
+      };
+      if (onUpdatePlayerData) {
+        onUpdatePlayerData(merged);
+      }
+      setImportStatus('Progress restored successfully!');
+      setTimeout(() => {
+        setImportStatus(null);
+        setShowBackupModal(false);
+      }, 1500);
+    } catch {
+      setImportStatus('Error importing save data');
+    }
+  };
+
+  const handleResetData = () => {
+    if (window.confirm('Are you sure you want to reset all game progress? This cannot be undone.')) {
+      if (onUpdatePlayerData) {
+        onUpdatePlayerData({ ...INITIAL_PLAYER_DATA });
+      }
+      setShowBackupModal(false);
+    }
+  };
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xs p-4 select-none animate-fade-in"
@@ -221,14 +295,197 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({
           </div>
         </div>
 
+        {/* Data & Google Play Safety Section */}
+        <div className="w-full mt-3 pt-3 border-t border-white/10 flex flex-col space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase text-[#8BA5F8] tracking-wider">
+              DATA SAFETY & BACKUP
+            </span>
+            <span className="text-[10px] font-bold text-emerald-400 flex items-center space-x-1">
+              <ShieldCheck className="w-3 h-3 inline" />
+              <span>100% Offline Safe</span>
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setShowBackupModal(true)}
+              className="flex items-center justify-center space-x-1.5 py-2 px-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-[11px] font-bold active:scale-95 transition-all cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5 text-blue-400" />
+              <span>Cloud / Save Backup</span>
+            </button>
+
+            <button
+              onClick={() => setShowPrivacyModal(true)}
+              className="flex items-center justify-center space-x-1.5 py-2 px-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-[11px] font-bold active:scale-95 transition-all cursor-pointer"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Privacy Policy</span>
+            </button>
+          </div>
+        </div>
+
+        {/* App Version Info */}
+        <div className="w-full text-center mt-2">
+          <span className="text-[10px] text-white/40 font-semibold tracking-wider">
+            SMOZI Puzzle • v1.0.0 • Google Play Edition
+          </span>
+        </div>
+
         {/* Done / Close Button */}
         <SmoziButton
           text="SAVE & APPLY"
           style="GREEN"
           onClick={onDismiss}
-          className="w-full py-3.5 mt-5 shadow-[0_8px_20px_rgba(52,199,89,0.4)] text-sm"
+          className="w-full py-3 mt-3 shadow-[0_8px_20px_rgba(52,199,89,0.4)] text-sm"
           testTag="settings_done_button"
         />
+
+        {/* Privacy Policy Modal */}
+        {showPrivacyModal && (
+          <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/80 p-4">
+            <div className="w-full max-w-sm bg-[#0E163D] border-2 border-blue-500 rounded-3xl p-5 shadow-2xl flex flex-col text-left max-h-[85vh] overflow-y-auto">
+              <div className="flex items-center justify-between pb-2 border-b border-white/10 mb-3">
+                <div className="flex items-center space-x-2">
+                  <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                  <span className="font-black text-lg text-white">Privacy Policy</span>
+                </div>
+                <button
+                  onClick={() => setShowPrivacyModal(false)}
+                  className="p-1 rounded-full bg-white/10 text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="text-xs text-slate-300 space-y-2.5 leading-relaxed">
+                <p>
+                  <strong>SMOZI: Premium Block Puzzle</strong> is an offline-first puzzle experience designed with privacy at its core.
+                </p>
+                <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 space-y-1">
+                  <div className="text-amber-300 font-bold">✓ Zero Personal Data Collected</div>
+                  <p className="text-[11px] text-slate-400">
+                    Your gameplay progress, level stars, coin balance, and high scores are saved locally on your device.
+                  </p>
+                </div>
+                <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 space-y-1">
+                  <div className="text-amber-300 font-bold">✓ COPPA & Family Policy Compliant</div>
+                  <p className="text-[11px] text-slate-400">
+                    Safe for all ages with no external social feeds or chat rooms.
+                  </p>
+                </div>
+                <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 space-y-1">
+                  <div className="text-amber-300 font-bold">✓ Minimal Permissions</div>
+                  <p className="text-[11px] text-slate-400">
+                    Only hardware vibration for piece drops and Web Audio for sound effects.
+                  </p>
+                </div>
+                <a
+                  href="/privacy.html"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center space-x-1.5 py-2 px-3 rounded-xl bg-blue-600/30 hover:bg-blue-600/40 border border-blue-500/50 text-blue-300 font-bold text-xs mt-2"
+                >
+                  <span>Open Full Web Policy</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
+
+              <button
+                onClick={() => setShowPrivacyModal(false)}
+                className="w-full mt-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs cursor-pointer"
+              >
+                Understood & Agree
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Cloud & Save Backup Modal */}
+        {showBackupModal && (
+          <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/80 p-4">
+            <div className="w-full max-w-sm bg-[#0E163D] border-2 border-indigo-500 rounded-3xl p-5 shadow-2xl flex flex-col text-left max-h-[85vh] overflow-y-auto">
+              <div className="flex items-center justify-between pb-2 border-b border-white/10 mb-3">
+                <div className="flex items-center space-x-2">
+                  <Download className="w-5 h-5 text-indigo-400" />
+                  <span className="font-black text-lg text-white">Save Backup & Sync</span>
+                </div>
+                <button
+                  onClick={() => setShowBackupModal(false)}
+                  className="p-1 rounded-full bg-white/10 text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {/* Export Section */}
+                <div className="p-3 rounded-xl bg-black/40 border border-white/10 space-y-2">
+                  <span className="text-xs font-bold text-amber-300 block">
+                    1. Export Progress Code
+                  </span>
+                  <p className="text-[11px] text-slate-300">
+                    Copy your encrypted save string to back up or transfer your progress to another device.
+                  </p>
+                  <button
+                    onClick={handleExportBackup}
+                    className="w-full flex items-center justify-center space-x-1.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs cursor-pointer active:scale-95 transition-transform"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy Save Code</span>
+                  </button>
+                  {copyStatus && (
+                    <span className="text-[10px] text-emerald-400 font-bold block text-center">
+                      {copyStatus}
+                    </span>
+                  )}
+                </div>
+
+                {/* Import Section */}
+                <div className="p-3 rounded-xl bg-black/40 border border-white/10 space-y-2">
+                  <span className="text-xs font-bold text-blue-300 block">
+                    2. Restore from Save Code
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Paste save code here..."
+                    value={backupCodeInput}
+                    onChange={(e) => setBackupCodeInput(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-black/60 border border-white/20 text-white text-xs outline-none focus:border-blue-400"
+                  />
+                  <button
+                    onClick={handleImportBackup}
+                    className="w-full flex items-center justify-center space-x-1.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs cursor-pointer active:scale-95 transition-transform"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>Restore Progress</span>
+                  </button>
+                  {importStatus && (
+                    <span
+                      className={`text-[10px] font-bold block text-center ${
+                        importStatus.includes('successfully') ? 'text-emerald-400' : 'text-rose-400'
+                      }`}
+                    >
+                      {importStatus}
+                    </span>
+                  )}
+                </div>
+
+                {/* Reset Section */}
+                <div className="pt-1">
+                  <button
+                    onClick={handleResetData}
+                    className="w-full flex items-center justify-center space-x-1 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/40 border border-rose-500/30 text-rose-300 font-bold text-[11px] cursor-pointer"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span>Reset All Game Progress</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

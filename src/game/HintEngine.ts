@@ -81,8 +81,8 @@ export class HintEngine {
             bestMove = {
               slotIndex,
               piece,
-              row,
-              col,
+              row: r,
+              col: c,
               occupiedCells,
               linesCleared: clearRes.linesClearedCount
             };

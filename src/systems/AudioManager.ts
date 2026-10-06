@@ -4,6 +4,20 @@ export class AudioManager {
 
   private ctx: AudioContext | null = null;
 
+  constructor() {
+    if (typeof window !== 'undefined') {
+      const unlock = () => {
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume().catch(() => {});
+        }
+        window.removeEventListener('pointerdown', unlock);
+        window.removeEventListener('touchstart', unlock);
+      };
+      window.addEventListener('pointerdown', unlock, { passive: true });
+      window.addEventListener('touchstart', unlock, { passive: true });
+    }
+  }
+
   private getContext(): AudioContext | null {
     if (!this.ctx) {
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;

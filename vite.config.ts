@@ -10,12 +10,12 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon.svg', 'apple-touch-icon.png', 'Profile.svg'],
+      includeAssets: ['icon.svg', 'apple-touch-icon.png', 'Profile.svg', 'privacy.html', '.well-known/*'],
       manifest: {
         id: '/',
         name: 'SMOZI - Premium Block Puzzle',
         short_name: 'SMOZI',
-        description: 'Premium candy block puzzle game featuring classic endless mode, daily trials, 50 adventure levels, and tactile combos.',
+        description: 'Premium candy block puzzle game featuring classic endless mode, daily trials, 96 adventure levels, and tactile combos.',
         theme_color: '#0D163D',
         background_color: '#090E29',
         display: 'standalone',
