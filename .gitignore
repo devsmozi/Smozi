@@ -10,6 +10,10 @@
 /.idea/assetWizardSettings.xml
 .DS_Store
 /build
+/dist
+/dev-dist
+node_modules
+*.tsbuildinfo
 /captures
 .externalNativeBuild
 .cxx
